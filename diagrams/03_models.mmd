@@ -1,0 +1,39 @@
+---
+title: Модуль моделей
+---
+classDiagram
+    class User {
+        +int id
+        +string username
+        +string password_hash
+        +string role
+        +datetime created_at
+        +boolean upload_blocked
+        +set_password(password)
+        +check_password(password)
+        +is_admin
+        +can_upload
+    }
+
+    class db {
+        <<SQLAlchemy>>
+        +init_app(app)
+        +create_all()
+    }
+
+    class ModelFunctions {
+        +init_db(app)
+        +get_user_count()
+        +get_admin_count()
+        +get_all_users()
+        +get_user_by_id(id)
+        +get_user_by_username(name)
+        +create_user(name, pwd, admin)
+        +delete_user(id)
+        +toggle_user_upload_block(id)
+        +migrate_database_schema()
+    }
+
+    User --> db : использует
+    ModelFunctions --> User : управляет
+    ModelFunctions --> db : использует

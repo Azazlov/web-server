@@ -1,0 +1,20 @@
+---
+title: Структура базы данных
+---
+erDiagram
+    USERS {
+        int id PK
+        string username UK
+        string password_hash
+        string role
+        datetime created_at
+        boolean upload_blocked
+    }
+
+    USERS ||--o{ SESSIONS : has
+
+    SESSIONS {
+        string session_id PK
+        int user_id FK
+        datetime expiry
+    }

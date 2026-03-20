@@ -1,0 +1,65 @@
+---
+title: Общая архитектура приложения
+---
+flowchart TB
+    subgraph Client ["Клиент (Браузер)"]
+        Browser[Веб-браузер]
+    end
+
+    subgraph App ["FileShare Local App"]
+        Flask[Flask App<br/>app.py]
+        
+        subgraph Blueprints ["Blueprints (Маршруты)"]
+            Auth[auth.py<br/>Аутентификация]
+            Main[main.py<br/>Главные страницы]
+            Files[files.py<br/>Управление файлами]
+            Admin[admin.py<br/>Админ-панель]
+        end
+        
+        subgraph Modules ["Модули"]
+            Config[config.py<br/>Конфигурация]
+            Models[models.py<br/>Модели БД]
+            Utils[utils.py<br/>Утилиты]
+        end
+        
+        subgraph Extensions ["Расширения"]
+            DB[SQLAlchemy<br/>База данных]
+            Login[Flask-Login<br/>Сессии]
+        end
+    end
+
+    subgraph Storage ["Хранилище"]
+        SQLite[(SQLite<br/>database.db)]
+        Uploads["uploads/<br/>shared/<br/>users/{username}/"]
+        Static[static/<br/>css/<br/>js/]
+        Templates[templates/<br/>*.html]
+    end
+
+    Browser -->|HTTP запросы| Flask
+    Flask --> Auth
+    Flask --> Main
+    Flask --> Files
+    Flask --> Admin
+    
+    Auth --> Models
+    Auth --> Login
+    Main --> Models
+    Main --> Utils
+    Main --> Login
+    Files --> Models
+    Files --> Utils
+    Files --> Login
+    Admin --> Models
+    Admin --> Config
+    Admin --> Utils
+    Admin --> Login
+    
+    Auth --> DB
+    Main --> DB
+    Files --> DB
+    Admin --> DB
+    
+    DB --> SQLite
+    Files --> Uploads
+    Flask --> Static
+    Flask --> Templates

@@ -1,0 +1,61 @@
+---
+title: Управление файлами (files.py)
+---
+flowchart TD
+    subgraph Upload ["POST /upload"]
+        U1[Проверка прав]
+        U2{folder_type?}
+        U3[shared + admin]
+        U4[personal + blocked]
+        U5[Сохранить файл]
+        U6[flash + redirect]
+    end
+
+    subgraph Download ["GET /download"]
+        D1[Получить параметры]
+        D2[validate_path_security]
+        D3{Путь валиден?}
+        D4{Файл существует?}
+        D5[send_from_directory]
+    end
+
+    subgraph Delete ["POST /delete"]
+        E1[Проверка прав]
+        E2[validate_path_security]
+        E3{is_dir?}
+        E4[os.remove]
+        E5[shutil.rmtree]
+        E6[flash + redirect]
+    end
+
+    subgraph Mkdir ["POST /mkdir"]
+        M1[Проверка прав]
+        M2[secure_filename]
+        M3[os.makedirs]
+        M4[flash + redirect]
+    end
+
+    U1 --> U2
+    U2 --> U3
+    U2 --> U4
+    U3 --> U5
+    U4 --> U5
+    U5 --> U6
+
+    D1 --> D2
+    D2 --> D3
+    D3 -->|Да| D4
+    D3 -->|Нет| D6[error redirect]
+    D4 -->|Да| D5
+    D4 -->|Нет| D6
+
+    E1 --> E2
+    E2 --> E3
+    E3 -->|Файл| E4
+    E3 -->|Папка| E5
+    E4 --> E6
+    E5 --> E6
+
+    M1 --> M2
+    M2 --> M3
+    M3 --> M4

@@ -1,0 +1,39 @@
+---
+title: Главные страницы (main.py)
+---
+flowchart TD
+    subgraph Routes ["main.py Routes"]
+        Index[index /]
+        Dashboard[dashboard /dashboard]
+        Shared[shared /shared]
+        Personal[personal /personal]
+    end
+
+    subgraph Logic ["Логика"]
+        AuthCheck{Авторизован?}
+        GetPath[get_base_path]
+        GetContents[get_folder_contents]
+        GetBreadcrumbs[get_breadcrumbs]
+    end
+
+    subgraph Templates ["Шаблоны"]
+        Login[redirect login]
+        PersonalTpl[personal.html]
+        SharedTpl[shared.html]
+    end
+
+    Index --> AuthCheck
+    AuthCheck -->|Да| Dashboard
+    AuthCheck -->|Нет| Login
+    
+    Dashboard --> Personal
+    
+    Shared --> GetPath
+    Shared --> GetContents
+    Shared --> GetBreadcrumbs
+    Shared --> SharedTpl
+    
+    Personal --> GetPath
+    Personal --> GetContents
+    Personal --> GetBreadcrumbs
+    Personal --> PersonalTpl

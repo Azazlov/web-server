@@ -1,0 +1,31 @@
+---
+title: Админ-панель (admin.py)
+---
+classDiagram
+    class AdminRoutes {
+        +admin_panel()
+        +admin_settings()
+    }
+
+    class AdminPanel {
+        GET /admin
+        --
+        Показывает:
+        - всех пользователей
+        - настройки сервера
+        - статистику
+    }
+
+    class AdminSettings {
+        POST /admin/settings
+        --
+        Actions:
+        - toggle_registration
+        - restart_server
+        - toggle_upload_block
+    }
+
+    AdminRoutes --> AdminPanel
+    AdminRoutes --> AdminSettings
+
+    note for AdminSettings "Все изменения сохраняются в config.json\nПерезапуск через execv"

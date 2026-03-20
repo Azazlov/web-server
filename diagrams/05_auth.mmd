@@ -1,0 +1,37 @@
+---
+title: Аутентификация (auth.py)
+---
+sequenceDiagram
+    participant U as Пользователь
+    participant A as auth.py
+    participant M as models.py
+    participant T as templates/
+    participant C as config.py
+
+    U->>A: GET /login
+    A->>T: render_template(login.html)
+    T-->>U: Форма входа
+
+    U->>A: POST /login<br/>(username, password)
+    A->>M: get_user_by_username()
+    M-->>A: User объект
+    A->>A: check_password()
+    A->>A: login_user()
+    A-->>U: redirect /personal
+
+    U->>A: GET /register
+    A->>C: allow_registration?
+    C-->>A: True/False
+    alt Registration allowed
+        A->>T: render_template(register.html)
+        T-->>U: Форма регистрации
+    else Registration blocked
+        A-->>U: redirect /login + flash
+    end
+
+    U->>A: POST /register
+    A->>M: get_user_count()
+    M-->>A: count
+    A->>M: create_user()
+    M-->>A: User объект
+    A-->>U: redirect /login + flash

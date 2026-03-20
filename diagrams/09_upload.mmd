@@ -1,0 +1,23 @@
+---
+title: Загрузка файла
+---
+sequenceDiagram
+    participant U as Пользователь
+    participant F as files.py
+    participant UT as utils.py
+    participant M as models.py
+    participant FS as Файловая система
+    participant T as templates/
+
+    U->>F: POST /upload<br/>file + folder_type
+    F->>M: current_user.upload_blocked
+    M-->>F: False
+    F->>UT: get_base_path
+    UT-->>F: /uploads/users/username/
+    F->>UT: safe_filename
+    UT-->>F: document.pdf
+    F->>FS: file.save(path)
+    FS-->>F: OK
+    F->>F: flash success
+    F->>T: redirect personal.html
+    T-->>U: Обновлённая страница

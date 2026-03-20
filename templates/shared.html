@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Общая папка - FileShare Local{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header {% if current_user.is_admin %}admin-header{% endif %}">
+                <i class="bi bi-people"></i> Общая папка
+                {% if current_user.is_admin %}
+                    <span class="badge bg-light text-dark float-end"><i class="bi bi-shield-check"></i> Доступ администратора</span>
+                {% else %}
+                    <span class="badge bg-light text-dark float-end"><i class="bi bi-eye"></i> Только чтение</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <!-- Хлебные крошки -->
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-3">
+                        {% for crumb in breadcrumbs %}
+                            {% if loop.last %}
+                                <li class="breadcrumb-item active" aria-current="page">{{ crumb.name }}</li>
+                            {% else %}
+                                <li class="breadcrumb-item">
+                                    <a href="{{ url_for('main.shared', path=crumb.path) }}">{{ crumb.name }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ol>
+                </nav>
+
+                <!-- Форма загрузки (только админ) -->
+                {% if current_user.is_admin %}
+                <div class="upload-area">
+                    <form action="{{ url_for('files.upload') }}" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="folder_type" value="shared">
+                        <input type="hidden" name="path" value="{{ current_path }}">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-auto">
+                                <label class="form-label mb-0"><i class="bi bi-upload"></i> Загрузить файл:</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="file" class="form-control" name="file" required>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-admin btn-action">
+                                    <i class="bi bi-cloud-upload"></i> Загрузить
+                                </button>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-outline-primary btn-action" data-bs-toggle="modal" data-bs-target="#mkdirModal">
+                                    <i class="bi bi-folder-plus"></i> Создать папку
+                                </button>
+                            </div>
+                        </div>
+                        <small class="text-muted">Максимальный размер файла: 100 МБ</small>
+                    </form>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> У вас есть доступ только на чтение. Обратитесь к администратору для загрузки файлов.
+                </div>
+                {% endif %}
+
+                <!-- Таблица файлов -->
+                {% if items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 45%;">Имя</th>
+                                <th style="width: 15%;">Размер</th>
+                                <th style="width: 20%;">Изменён</th>
+                                <th style="width: 20%;" class="text-end">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Ссылка на родительскую директорию (если не в корне) -->
+                            {% if current_path %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('main.shared', path=current_path|dirname) }}" class="text-decoration-none">
+                                        <i class="bi bi-arrow-up-square file-icon folder-icon"></i>
+                                        <strong>..</strong>
+                                    </a>
+                                </td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td></td>
+                            </tr>
+                            {% endif %}
+
+                            {% for item in items %}
+                            <tr>
+                                <td>
+                                    {% if item.is_dir %}
+                                        <a href="{{ url_for('main.shared', path=item.path) }}" class="text-decoration-none">
+                                            <i class="bi bi-folder file-icon folder-icon"></i>
+                                            <strong>{{ item.name }}</strong>
+                                        </a>
+                                    {% else %}
+                                        <i class="bi bi-file-earmark file-icon"></i>
+                                        {{ item.name }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.size_human }}</td>
+                                <td>{{ item.modified }}</td>
+                                <td class="text-end">
+                                    {% if item.is_dir %}
+                                        <a href="{{ url_for('main.shared', path=item.path) }}" class="btn btn-sm btn-outline-primary btn-action">
+                                            <i class="bi bi-folder-open"></i> Открыть
+                                        </a>
+                                        {% if current_user.is_admin %}
+                                        <form action="{{ url_for('files.delete') }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить эту папку и всё её содержимое?')">
+                                            <input type="hidden" name="folder_type" value="shared">
+                                            <input type="hidden" name="filename" value="{{ item.name }}">
+                                            <input type="hidden" name="path" value="{{ current_path }}">
+                                            <input type="hidden" name="is_dir" value="true">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger btn-action">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    {% else %}
+                                        <a href="{{ url_for('files.download', folder_type='shared', filename=item.name, path=current_path) }}" class="btn btn-sm btn-primary btn-action">
+                                            <i class="bi bi-download"></i> Скачать
+                                        </a>
+                                        {% if current_user.is_admin %}
+                                        <form action="{{ url_for('files.delete') }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить этот файл?')">
+                                            <input type="hidden" name="folder_type" value="shared">
+                                            <input type="hidden" name="filename" value="{{ item.name }}">
+                                            <input type="hidden" name="path" value="{{ current_path }}">
+                                            <input type="hidden" name="is_dir" value="false">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger btn-action">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-4">
+                    <i class="bi bi-folder-open" style="font-size: 3rem;"></i>
+                    <br>Эта папка пуста.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно создания папки -->
+<div class="modal fade" id="mkdirModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('files.mkdir') }}" method="POST">
+                <div class="modal-header admin-modal">
+                    <h5 class="modal-title"><i class="bi bi-folder-plus"></i> Создать новую папку</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="folder_type" value="shared">
+                    <input type="hidden" name="path" value="{{ current_path }}">
+                    <div class="mb-3">
+                        <label for="folder_name" class="form-label">Имя папки</label>
+                        <input type="text" class="form-control" id="folder_name" name="folder_name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-folder-plus"></i> Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

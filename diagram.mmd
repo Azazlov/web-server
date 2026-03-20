@@ -1,0 +1,51 @@
+# FileShare Local v2.1 — Диаграммы
+
+Этот файл содержит ссылки на отдельные диаграммы Mermaid.
+
+## Список диаграмм
+
+| № | Файл | Описание | Тип |
+|---|------|----------|-----|
+| 1 | [`01_architecture.mmd`](01_architecture.mmd) | Общая архитектура приложения | Flowchart |
+| 2 | [`02_config.mmd`](02_config.mmd) | Модуль конфигурации | Class Diagram |
+| 3 | [`03_models.mmd`](03_models.mmd) | Модуль моделей | Class Diagram |
+| 4 | [`04_utils.mmd`](04_utils.mmd) | Модуль утилит | Flowchart |
+| 5 | [`05_auth.mmd`](05_auth.mmd) | Аутентификация | Sequence Diagram |
+| 6 | [`06_main.mmd`](06_main.mmd) | Главные страницы | Flowchart |
+| 7 | [`07_files.mmd`](07_files.mmd) | Управление файлами | Flowchart |
+| 8 | [`08_admin.mmd`](08_admin.mmd) | Админ-панель | Class Diagram |
+| 9 | [`09_upload.mmd`](09_upload.mmd) | Загрузка файла | Sequence Diagram |
+| 10 | [`10_request_lifecycle.mmd`](10_request_lifecycle.mmd) | Жизненный цикл запроса | Flowchart |
+| 11 | [`11_database.mmd`](11_database.mmd) | Структура базы данных | ER Diagram |
+| 12 | [`12_project_tree.mmd`](12_project_tree.mmd) | Дерево проекта | Flowchart |
+
+## Просмотр
+
+### VS Code
+Установите расширение **"Mermaid Preview"** или **"Mermaid Diagrams"**.
+
+### Онлайн
+Откройте любой `.mmd` файл на [mermaid.live](https://mermaid.live)
+
+### CLI
+```bash
+# Установка
+npm install -g @mermaid-js/mermaid-cli
+
+# Конвертация в PNG
+mmdc -i diagrams/01_architecture.mmd -o diagrams/01_architecture.png
+
+# Конвертация всех диаграмм
+for f in diagrams/*.mmd; do mmdc -i "$f" -o "${f%.mmd}.png"; done
+```
+
+## Быстрый просмотр (cat + mermaid-cli)
+
+```bash
+# Просмотр в терминале (если поддерживается)
+cat diagrams/01_architecture.mmd
+
+# Генерация всех PNG
+mmdc -i diagrams/01_architecture.mmd -o architecture.png
+mmdc -i diagrams/07_files.mmd -o files_flow.png
+```

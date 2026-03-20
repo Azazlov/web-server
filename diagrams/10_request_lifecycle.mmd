@@ -1,0 +1,47 @@
+---
+title: Жизненный цикл запроса
+---
+flowchart LR
+    subgraph Request ["Запрос"]
+        R[HTTP Request]
+    end
+
+    subgraph Routing ["Маршрутизация"]
+        BP{Blueprint?}
+        Auth[auth_bp]
+        Main[main_bp]
+        Files[files_bp]
+        Admin[admin_bp]
+    end
+
+    subgraph Processing ["Обработка"]
+        LC[Login Check]
+        VC[Validation]
+        DB[Database]
+        FS[File System]
+    end
+
+    subgraph Response ["Ответ"]
+        Render[Render Template]
+        Redirect[Redirect]
+        Download[Send File]
+    end
+
+    R --> BP
+    BP --> Auth
+    BP --> Main
+    BP --> Files
+    BP --> Admin
+
+    Auth --> LC
+    Main --> LC
+    Files --> LC
+    Admin --> LC
+
+    LC --> VC
+    VC --> DB
+    VC --> FS
+
+    DB --> Render
+    FS --> Download
+    FS --> Redirect

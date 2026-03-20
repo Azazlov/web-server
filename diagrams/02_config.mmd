@@ -1,0 +1,29 @@
+---
+title: Модуль конфигурации
+---
+classDiagram
+    class Config {
+        -dict _config
+        +load()
+        +save()
+        +get(key, default)
+        +set(key, value)
+        +toggle_registration()
+        +to_dict()
+        +server_port: int
+        +max_upload_size_mb: int
+        +max_upload_size_bytes: int
+        +allow_registration: bool
+        +debug_mode: bool
+    }
+
+    class config {
+        <<global instance>>
+    }
+
+    Config --> config : создаёт
+    config --> Flask : передаёт настройки
+
+    note for Config "Хранит настройки в config.json
+Автоматически загружает при старте
+Сохраняет при изменении"

@@ -1,0 +1,39 @@
+---
+title: Модуль утилит
+---
+flowchart LR
+    subgraph Utils ["utils.py"]
+        FS[format_size]
+        GFC[get_folder_contents]
+        GB[get_breadcrumbs]
+        GRP[get_relative_path]
+        GBP[get_base_path]
+        EUD[ensure_upload_dirs]
+        MUF[migrate_user_folders]
+        VPS[validate_path_security]
+        AR[admin_required]
+        AF[allowed_file]
+        SF[safe_filename]
+    end
+
+    subgraph UsedBy ["Используют"]
+        Files[files.py]
+        Main[main.py]
+        Admin[admin.py]
+    end
+
+    Utils --> Files
+    Utils --> Main
+    Utils --> Admin
+
+    style FS fill:#e1f5ff
+    style GFC fill:#e1f5ff
+    style GB fill:#e1f5ff
+    style GRP fill:#ffe1e1
+    style GBP fill:#e1f5ff
+    style EUD fill:#e1ffe1
+    style MUF fill:#e1ffe1
+    style VPS fill:#ffe1e1
+    style AR fill:#fff3e1
+    style AF fill:#e1f5ff
+    style SF fill:#e1f5ff

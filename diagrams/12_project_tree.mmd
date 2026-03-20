@@ -1,0 +1,44 @@
+---
+title: Дерево проекта
+---
+flowchart TD
+    Root[FileShare Local v2.1]
+    
+    Root --> App[app.py<br/>76 строк]
+    Root --> Config[config.json]
+    Root --> Req[requirements.txt]
+    Root --> DB[database.db]
+    
+    Root --> Modules[modules/]
+    Modules --> MInit[__init__.py]
+    Modules --> MConfig[config.py]
+    Modules --> MModels[models.py]
+    Modules --> MUtils[utils.py]
+    Modules --> MRoutes[routes/]
+    
+    MRoutes --> RInit[__init__.py]
+    MRoutes --> RAuth[auth.py]
+    MRoutes --> RMain[main.py]
+    MRoutes --> RFiles[files.py]
+    MRoutes --> RAdmin[admin.py]
+    
+    Root --> Templates[templates/]
+    Templates --> TBase[base.html]
+    Templates --> TLogin[login.html]
+    Templates --> TRegister[register.html]
+    Templates --> TShared[shared.html]
+    Templates --> TPersonal[personal.html]
+    Templates --> TAdmin[admin.html]
+    
+    Root --> Static[static/]
+    Static --> CSS[css/style.css]
+    Static --> JS[js/main.js]
+    
+    Root --> Scripts[scripts/]
+    Root --> Docs[README.md<br/>diagram.mmd]
+    Root --> Git[.gitignore]
+
+    style App fill:#4CAF50,color:#fff
+    style Modules fill:#2196F3,color:#fff
+    style Templates fill:#FF9800,color:#fff
+    style Static fill:#9C27B0,color:#fff

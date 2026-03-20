@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация - FileShare Local{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card">
+            <div class="card-header text-center">
+                <i class="bi bi-person-plus"></i> Регистрация
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Имя пользователя</label>
+                        <input type="text" class="form-control" id="username" name="username" required autofocus minlength="3" maxlength="50">
+                        <div class="form-text">От 3 до 50 символов</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="password" name="password" required minlength="4">
+                        <div class="form-text">Минимум 4 символа</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Подтверждение пароля</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus"></i> Зарегистрироваться
+                        </button>
+                    </div>
+                </form>
+                <hr>
+                <div class="text-center">
+                    <a href="{{ url_for('auth.login') }}" class="text-decoration-none">
+                        <i class="bi bi-box-arrow-in-right"></i> Уже есть учётная запись? Войти
+                    </a>
+                </div>
+                {% if user_count == 0 %}
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle"></i> Вы первый пользователь — вы станете <strong>Администратором</strong>!
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

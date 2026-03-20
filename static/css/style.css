@@ -1,0 +1,185 @@
+/* FileShare Local v2.1 - Main Stylesheet */
+
+/* Base Styles */
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+/* Navigation */
+.navbar {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+/* Cards */
+.card {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: none;
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    font-weight: 600;
+    border-radius: 12px 12px 0 0 !important;
+    padding: 16px 20px;
+}
+
+.card-header.admin-header {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.card-header.personal-header {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+}
+
+/* Tables */
+.table {
+    margin-bottom: 0;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Icons */
+.file-icon {
+    font-size: 1.3rem;
+    margin-right: 12px;
+    color: #3498db;
+    width: 24px;
+    text-align: center;
+}
+
+.folder-icon {
+    color: #f39c12;
+}
+
+/* Alerts */
+.alert {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Badges */
+.badge-admin {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.badge-user {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+/* Buttons */
+.btn-action {
+    padding: 4px 12px;
+    font-size: 0.875rem;
+}
+
+.btn-admin {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-admin:hover {
+    background-color: #c0392b;
+    color: white;
+}
+
+/* Breadcrumbs */
+.breadcrumb {
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Navigation Pills */
+.nav-pills .nav-link {
+    color: #495057;
+    border-radius: 8px;
+    padding: 10px 20px;
+    margin-right: 8px;
+}
+
+.nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+/* Upload Area */
+.upload-area {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.upload-area:hover {
+    border-color: #3498db;
+    background: #ebf5fb;
+}
+
+/* Modals */
+.modal-header {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+}
+
+.modal-header.admin-modal {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+/* Sidebar Info */
+.sidebar-info {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Utility Classes */
+.float-end {
+    float: right;
+}
+
+.text-end {
+    text-align: right;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 16px;
+    }
+    
+    .btn-action {
+        padding: 2px 8px;
+        font-size: 0.75rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .navbar, .btn-action, .upload-area, .breadcrumb {
+        display: none;
+    }
+}
