@@ -52,7 +52,6 @@ uploads/
 
 # Config files (with sensitive data)
 config.json
-config.py
 
 # Temporary files
 *.tmp
