@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}FileShare Local{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,16 +16,24 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+    </style>
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('main.personal') }}">
-                <i class="bi bi-folder2-open"></i> FileShare Local
+                <i class="bi bi-folder2-open"></i>
+                <span>FileShare Local</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -28,33 +41,42 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.shared') }}">
-                            <i class="bi bi-people"></i> Общая папка
+                            <i class="bi bi-people"></i>
+                            <span>Общая папка</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.personal') }}">
-                            <i class="bi bi-folder"></i> Личная папка
+                            <i class="bi bi-folder"></i>
+                            <span>Личная папка</span>
                         </a>
                     </li>
                     {% if current_user.is_admin %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.admin_panel') }}">
-                            <i class="bi bi-gear"></i> Админ-панель
+                            <i class="bi bi-gear"></i>
+                            <span>Админ-панель</span>
                         </a>
                     </li>
                     {% endif %}
                 </ul>
-                <div class="navbar-nav">
-                    <span class="navbar-text me-3">
-                        <i class="bi bi-person-circle"></i> {{ current_user.username }}
+                <div class="navbar-nav align-items-center">
+                    <div class="navbar-text me-3">
+                        <i class="bi bi-person-circle"></i>
+                        <span>{{ current_user.username }}</span>
                         {% if current_user.is_admin %}
-                            <span class="badge badge-admin">Админ</span>
+                            <span class="badge badge-admin ms-1">
+                                <i class="bi bi-shield-check"></i> Админ
+                            </span>
                         {% else %}
-                            <span class="badge badge-user">Пользователь</span>
+                            <span class="badge badge-user ms-1">
+                                <i class="bi bi-person-check"></i> Пользователь
+                            </span>
                         {% endif %}
-                    </span>
+                    </div>
                     <a class="btn btn-outline-light btn-sm" href="{{ url_for('auth.logout') }}">
-                        <i class="bi bi-box-arrow-right"></i> Выход
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span class="d-none d-sm-inline">Выход</span>
                     </a>
                 </div>
                 {% endif %}
@@ -62,25 +84,64 @@
         </div>
     </nav>
 
-    <div class="container-fluid mt-4">
+    <!-- Main Content -->
+    <main class="container-fluid py-4">
+        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                        <i class="bi bi-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }}"></i> {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="row">
+                    <div class="col-12">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm" role="alert">
+                                {% if category == 'error' %}
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                {% elif category == 'success' %}
+                                    <i class="bi bi-check-circle-fill"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="bi bi-exclamation-circle-fill"></i>
+                                {% else %}
+                                    <i class="bi bi-info-circle-fill"></i>
+                                {% endif %}
+                                <span class="ms-2">{{ message }}</span>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
 
+        <!-- Page Content -->
         {% block content %}{% endblock %}
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-muted">
+        <small>
+            <i class="bi bi-folder2-open"></i> FileShare Local v2.1
+            <span class="mx-2">•</span>
+            <a href="#" class="text-decoration-none text-muted" data-bs-toggle="tooltip" title="Система управления файлами">
+                <i class="bi bi-info-circle"></i> О системе
+            </a>
+        </small>
+    </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
     {% block extra_js %}{% endblock %}
+    
+    <!-- Initialize tooltips on page load -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
 </body>
 </html>

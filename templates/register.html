@@ -2,48 +2,294 @@
 
 {% block title %}Регистрация - FileShare Local{% endblock %}
 
+{% block extra_css %}
+<style>
+    .auth-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-image: 
+            radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+    }
+    
+    .auth-card {
+        width: 100%;
+        max-width: 450px;
+        animation: slideUp 0.6s ease-out;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .auth-header {
+        text-align: center;
+        padding: 40px 20px 30px !important;
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+        border-radius: 16px 16px 0 0 !important;
+    }
+    
+    .auth-header i {
+        font-size: 4rem;
+        margin-bottom: 15px;
+        display: block;
+        animation: rotateIn 0.8s ease-out;
+    }
+    
+    @keyframes rotateIn {
+        from {
+            opacity: 0;
+            transform: rotate(-180deg) scale(0.5);
+        }
+        to {
+            opacity: 1;
+            transform: rotate(0) scale(1);
+        }
+    }
+    
+    .auth-header h4 {
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+    
+    .auth-body {
+        padding: 30px !important;
+    }
+    
+    .form-control {
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.15);
+    }
+    
+    .btn-register {
+        padding: 14px;
+        font-size: 1rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        border: none;
+        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+    }
+    
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        margin: 25px 0;
+    }
+    
+    .auth-divider::before,
+    .auth-divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .auth-divider span {
+        padding: 0 15px;
+        color: #a0aec0;
+        font-size: 0.85rem;
+    }
+    
+    .login-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #4facfe;
+        text-decoration: none;
+        font-weight: 500;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .login-link:hover {
+        background: rgba(79, 172, 254, 0.1);
+        color: #00f2fe;
+        transform: translateX(5px);
+    }
+    
+    .input-group-custom {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .input-group-custom i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #a0aec0;
+        font-size: 1.1rem;
+        transition: color 0.3s ease;
+    }
+    
+    .input-group-custom .form-control {
+        padding-left: 45px;
+    }
+    
+    .input-group-custom:focus-within i {
+        color: #4facfe;
+    }
+    
+    .password-strength {
+        margin-top: 8px;
+        height: 4px;
+        background: #e2e8f0;
+        border-radius: 2px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .password-strength-bar {
+        height: 100%;
+        width: 0%;
+        transition: all 0.3s ease;
+        border-radius: 2px;
+    }
+    
+    .password-strength.weak .password-strength-bar {
+        width: 33%;
+        background: linear-gradient(90deg, #dc3545 0%, #ffc107 100%);
+    }
+    
+    .password-strength.medium .password-strength-bar {
+        width: 66%;
+        background: linear-gradient(90deg, #ffc107 0%, #28a745 100%);
+    }
+    
+    .password-strength.strong .password-strength-bar {
+        width: 100%;
+        background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .first-user-badge {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 12px;
+        margin-top: 20px;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-        <div class="card">
-            <div class="card-header text-center">
-                <i class="bi bi-person-plus"></i> Регистрация
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="card shadow-lg">
+            <div class="auth-header">
+                <i class="bi bi-person-plus"></i>
+                <h4>Регистрация</h4>
+                <p class="text-white-50 mb-0 mt-2">Создайте учётную запись</p>
             </div>
-            <div class="card-body">
+            <div class="auth-body">
                 <form method="POST">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Имя пользователя</label>
-                        <input type="text" class="form-control" id="username" name="username" required autofocus minlength="3" maxlength="50">
-                        <div class="form-text">От 3 до 50 символов</div>
+                    <div class="input-group-custom">
+                        <i class="bi bi-person"></i>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Имя пользователя" required autofocus minlength="3" maxlength="50">
                     </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Пароль</label>
-                        <input type="password" class="form-control" id="password" name="password" required minlength="4">
-                        <div class="form-text">Минимум 4 символа</div>
+                    <small class="text-muted d-block mb-3 ms-2">
+                        <i class="bi bi-info-circle"></i> От 3 до 50 символов
+                    </small>
+                    
+                    <div class="input-group-custom">
+                        <i class="bi bi-lock"></i>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Пароль" required minlength="4" oninput="checkPasswordStrength(this.value)">
                     </div>
-                    <div class="mb-3">
-                        <label for="confirm_password" class="form-label">Подтверждение пароля</label>
-                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    <div class="password-strength" id="passwordStrength">
+                        <div class="password-strength-bar"></div>
                     </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-person-plus"></i> Зарегистрироваться
+                    <small class="text-muted d-block mb-3 ms-2">
+                        <i class="bi bi-shield-check"></i> Минимум 4 символа
+                    </small>
+                    
+                    <div class="input-group-custom">
+                        <i class="bi bi-lock-fill"></i>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Подтверждение пароля" required>
+                    </div>
+                    
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-register">
+                            <i class="bi bi-person-plus me-2"></i>
+                            Зарегистрироваться
                         </button>
                     </div>
                 </form>
-                <hr>
+                
+                <div class="auth-divider">
+                    <span>или</span>
+                </div>
+                
                 <div class="text-center">
-                    <a href="{{ url_for('auth.login') }}" class="text-decoration-none">
-                        <i class="bi bi-box-arrow-in-right"></i> Уже есть учётная запись? Войти
+                    <a href="{{ url_for('auth.login') }}" class="login-link">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        <span>Уже есть учётная запись? Войти</span>
                     </a>
                 </div>
+                
                 {% if user_count == 0 %}
-                <div class="alert alert-info mt-3 mb-0">
-                    <i class="bi bi-info-circle"></i> Вы первый пользователь — вы станете <strong>Администратором</strong>!
+                <div class="first-user-badge">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="bi bi-star-fill" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <strong style="font-size: 1rem;">Первый пользователь!</strong>
+                            <p class="mb-0" style="font-size: 0.85rem; opacity: 0.9;">
+                                Вы станете <strong>Администратором</strong> системы
+                            </p>
+                        </div>
+                    </div>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function checkPasswordStrength(password) {
+    const strengthIndicator = document.getElementById('passwordStrength');
+    let strength = 0;
+    
+    if (password.length >= 4) strength++;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    
+    strengthIndicator.className = 'password-strength';
+    if (password.length === 0) {
+        return;
+    } else if (strength <= 2) {
+        strengthIndicator.classList.add('weak');
+    } else if (strength <= 4) {
+        strengthIndicator.classList.add('medium');
+    } else {
+        strengthIndicator.classList.add('strong');
+    }
+}
+</script>
 {% endblock %}

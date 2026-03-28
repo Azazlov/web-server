@@ -2,35 +2,163 @@
 
 {% block title %}Общая папка - FileShare Local{% endblock %}
 
+{% block extra_css %}
+<style>
+    .folder-header {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        padding: 30px !important;
+        border-radius: 16px 16px 0 0 !important;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .folder-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+    }
+    
+    .folder-header::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: 10%;
+        width: 150px;
+        height: 150px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+    }
+    
+    .folder-header .badge {
+        background: rgba(255,255,255,0.9);
+        color: #fa709a;
+        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .upload-area {
+        background: linear-gradient(135deg, #fff5f7 0%, #fff9e6 100%);
+        border: 2px dashed #f6d365;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-area:hover {
+        border-color: #fa709a;
+        background: linear-gradient(135deg, #fff0f5 0%, #fff5eb 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(250, 112, 154, 0.15);
+    }
+    
+    .upload-area.drag-over {
+        border-color: #fa709a;
+        background: linear-gradient(135deg, #ffe4ec 0%, #fff0d5 100%);
+        transform: scale(1.02);
+    }
+    
+    .file-item {
+        transition: all 0.3s ease;
+    }
+    
+    .file-item:hover {
+        background: linear-gradient(135deg, rgba(250, 112, 154, 0.05) 0%, rgba(254, 225, 64, 0.05) 100%);
+        transform: translateX(5px);
+    }
+    
+    .file-item .btn-action {
+        opacity: 0.8;
+        transition: all 0.2s ease;
+    }
+    
+    .file-item:hover .btn-action {
+        opacity: 1;
+    }
+    
+    .empty-state {
+        padding: 80px 20px;
+        text-align: center;
+    }
+    
+    .empty-state i {
+        font-size: 6rem;
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+    
+    .breadcrumb {
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .folder-icon {
+        background: linear-gradient(135deg, #f6d365 0%, #fda085 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, #fff5f7 0%, #fff9e6 100%);
+        color: #d53f8c;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header {% if current_user.is_admin %}admin-header{% endif %}">
-                <i class="bi bi-people"></i> Общая папка
-                {% if current_user.is_admin %}
-                    <span class="badge bg-light text-dark float-end"><i class="bi bi-shield-check"></i> Доступ администратора</span>
-                {% else %}
-                    <span class="badge bg-light text-dark float-end"><i class="bi bi-eye"></i> Только чтение</span>
-                {% endif %}
+        <div class="card shadow-lg">
+            <div class="card-header folder-header">
+                <div style="position: relative; z-index: 1;">
+                    <i class="bi bi-people" style="font-size: 1.5rem; vertical-align: middle;"></i>
+                    <span style="font-size: 1.3rem; font-weight: 700; margin-left: 10px;">Общая папка</span>
+                    {% if current_user.is_admin %}
+                        <span class="badge float-end">
+                            <i class="bi bi-shield-check"></i> Доступ администратора
+                        </span>
+                    {% else %}
+                        <span class="badge float-end">
+                            <i class="bi bi-eye"></i> Только чтение
+                        </span>
+                    {% endif %}
+                </div>
             </div>
             <div class="card-body">
-                <!-- Хлебные крошки -->
+                <!-- Breadcrumbs -->
                 <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-3">
+                    <ol class="breadcrumb">
                         {% for crumb in breadcrumbs %}
                             {% if loop.last %}
-                                <li class="breadcrumb-item active" aria-current="page">{{ crumb.name }}</li>
+                                <li class="breadcrumb-item active" aria-current="page">
+                                    <i class="bi bi-folder2-open"></i> {{ crumb.name }}
+                                </li>
                             {% else %}
                                 <li class="breadcrumb-item">
-                                    <a href="{{ url_for('main.shared', path=crumb.path) }}">{{ crumb.name }}</a>
+                                    <a href="{{ url_for('main.shared', path=crumb.path) }}">
+                                        <i class="bi bi-folder"></i> {{ crumb.name }}
+                                    </a>
                                 </li>
                             {% endif %}
                         {% endfor %}
                     </ol>
                 </nav>
 
-                <!-- Форма загрузки (только админ) -->
+                <!-- Upload Form (Admin Only) -->
                 {% if current_user.is_admin %}
                 <div class="upload-area">
                     <form action="{{ url_for('files.upload') }}" method="POST" enctype="multipart/form-data">
@@ -38,13 +166,15 @@
                         <input type="hidden" name="path" value="{{ current_path }}">
                         <div class="row g-2 align-items-center">
                             <div class="col-auto">
-                                <label class="form-label mb-0"><i class="bi bi-upload"></i> Загрузить файл:</label>
+                                <label class="form-label mb-0" style="font-weight: 600; color: #d53f8c;">
+                                    <i class="bi bi-cloud-upload"></i> Загрузить файл:
+                                </label>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 <input type="file" class="form-control" name="file" required>
                             </div>
                             <div class="col-auto">
-                                <button type="submit" class="btn btn-admin btn-action">
+                                <button type="submit" class="btn btn-action" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; border: none; box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3);">
                                     <i class="bi bi-cloud-upload"></i> Загрузить
                                 </button>
                             </div>
@@ -54,34 +184,37 @@
                                 </button>
                             </div>
                         </div>
-                        <small class="text-muted">Максимальный размер файла: 100 МБ</small>
+                        <small class="text-muted" style="display: block; margin-top: 10px;">
+                            <i class="bi bi-info-circle"></i> Максимальный размер файла: 100 МБ • Перетащите файл в эту область для загрузки
+                        </small>
                     </form>
                 </div>
                 {% else %}
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> У вас есть доступ только на чтение. Обратитесь к администратору для загрузки файлов.
+                <div class="alert alert-info" style="background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%); border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <i class="bi bi-info-circle" style="font-size: 1.2rem;"></i>
+                    <span class="ms-2" style="font-weight: 500;">У вас есть доступ только на чтение. Обратитесь к администратору для загрузки файлов.</span>
                 </div>
                 {% endif %}
 
-                <!-- Таблица файлов -->
+                <!-- File Table -->
                 {% if items %}
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th style="width: 45%;">Имя</th>
-                                <th style="width: 15%;">Размер</th>
-                                <th style="width: 20%;">Изменён</th>
-                                <th style="width: 20%;" class="text-end">Действия</th>
+                                <th style="width: 45%;"><i class="bi bi-file-earmark"></i> Имя</th>
+                                <th style="width: 15%;"><i class="bi bi-hdd"></i> Размер</th>
+                                <th style="width: 20%;"><i class="bi bi-clock"></i> Изменён</th>
+                                <th style="width: 20%;" class="text-end"><i class="bi bi-gear"></i> Действия</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Ссылка на родительскую директорию (если не в корне) -->
+                            <!-- Parent Directory Link -->
                             {% if current_path %}
-                            <tr>
+                            <tr class="file-item">
                                 <td>
                                     <a href="{{ url_for('main.shared', path=current_path|dirname) }}" class="text-decoration-none">
-                                        <i class="bi bi-arrow-up-square file-icon folder-icon"></i>
+                                        <i class="bi bi-arrow-up-square file-icon" style="color: #a0aec0;"></i>
                                         <strong>..</strong>
                                     </a>
                                 </td>
@@ -92,7 +225,7 @@
                             {% endif %}
 
                             {% for item in items %}
-                            <tr>
+                            <tr class="file-item">
                                 <td>
                                     {% if item.is_dir %}
                                         <a href="{{ url_for('main.shared', path=item.path) }}" class="text-decoration-none">
@@ -104,8 +237,8 @@
                                         {{ item.name }}
                                     {% endif %}
                                 </td>
-                                <td>{{ item.size_human }}</td>
-                                <td>{{ item.modified }}</td>
+                                <td style="font-weight: 500;">{{ item.size_human }}</td>
+                                <td style="color: #718096;">{{ item.modified }}</td>
                                 <td class="text-end">
                                     {% if item.is_dir %}
                                         <a href="{{ url_for('main.shared', path=item.path) }}" class="btn btn-sm btn-outline-primary btn-action">
@@ -123,7 +256,7 @@
                                         </form>
                                         {% endif %}
                                     {% else %}
-                                        <a href="{{ url_for('files.download', folder_type='shared', filename=item.name, path=current_path) }}" class="btn btn-sm btn-primary btn-action">
+                                        <a href="{{ url_for('files.download', folder_type='shared', filename=item.name, path=current_path) }}" class="btn btn-sm btn-primary btn-action" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
                                             <i class="bi bi-download"></i> Скачать
                                         </a>
                                         {% if current_user.is_admin %}
@@ -145,36 +278,46 @@
                     </table>
                 </div>
                 {% else %}
-                <p class="text-muted text-center py-4">
-                    <i class="bi bi-folder-open" style="font-size: 3rem;"></i>
-                    <br>Эта папка пуста.
-                </p>
+                <div class="empty-state">
+                    <i class="bi bi-folder-open"></i>
+                    <p class="mt-3" style="font-size: 1.2rem; color: #a0aec0;">
+                        {% if current_user.is_admin %}
+                            Эта папка пуста. Загрузите файлы или создайте папки.
+                        {% else %}
+                            Эта папка пуста.
+                        {% endif %}
+                    </p>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Модальное окно создания папки -->
+<!-- Create Folder Modal -->
 <div class="modal fade" id="mkdirModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form action="{{ url_for('files.mkdir') }}" method="POST">
-                <div class="modal-header admin-modal">
-                    <h5 class="modal-title"><i class="bi bi-folder-plus"></i> Создать новую папку</h5>
+                <div class="modal-header" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border: none;">
+                    <h5 class="modal-title">
+                        <i class="bi bi-folder-plus"></i> Создать новую папку
+                    </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="folder_type" value="shared">
                     <input type="hidden" name="path" value="{{ current_path }}">
                     <div class="mb-3">
-                        <label for="folder_name" class="form-label">Имя папки</label>
-                        <input type="text" class="form-control" id="folder_name" name="folder_name" required>
+                        <label for="folder_name" class="form-label" style="font-weight: 600;">Имя папки</label>
+                        <input type="text" class="form-control" id="folder_name" name="folder_name" required placeholder="Например: Документы">
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="border: none; background: #f8f9fa;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-folder-plus"></i> Создать</button>
+                    <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border: none;">
+                        <i class="bi bi-folder-plus"></i> Создать
+                    </button>
                 </div>
             </form>
         </div>
