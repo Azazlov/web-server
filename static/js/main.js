@@ -271,6 +271,36 @@ function escapeHtml(text) {
 }
 
 /**
+ * Open rename modal with pre-filled values
+ */
+function openRenameModal(oldName, isDir, folderType) {
+    const renameOldName = document.getElementById('renameOldName');
+    const renameNewName = document.getElementById('renameNewName');
+    const renameIsDir = document.getElementById('renameIsDir');
+    const renameFolderType = document.getElementById('renameFolderType');
+
+    renameOldName.value = oldName;
+    renameNewName.value = oldName;
+    renameIsDir.value = isDir ? 'true' : 'false';
+    renameFolderType.value = folderType;
+
+    const modal = new bootstrap.Modal(document.getElementById('renameModal'));
+    modal.show();
+
+    // Focus and select the input field
+    setTimeout(() => {
+        renameNewName.focus();
+        // Select only the name part (before extension for files)
+        if (!isDir && oldName.includes('.')) {
+            const namePart = oldName.substring(0, oldName.lastIndexOf('.'));
+            renameNewName.setSelectionRange(0, namePart.length);
+        } else {
+            renameNewName.select();
+        }
+    }, 300);
+}
+
+/**
  * Enhanced keyboard shortcuts with visual feedback
  */
 function initKeyboardShortcuts() {

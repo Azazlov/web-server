@@ -8,7 +8,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from modules.utils import (
     get_base_path, get_relative_path, validate_path_security,
-    safe_filename, admin_required, is_previewable
+    safe_filename, admin_required, is_previewable, rename_item
 )
 from modules.models import User
 
@@ -183,5 +183,30 @@ def mkdir():
     else:
         os.makedirs(new_folder_path, exist_ok=True)
         flash(f'Папка "{folder_name}" создана.', 'success')
-    
+
+    return redirect(url_for('main.' + folder_type, path=rel_path) if rel_path else url_for('main.' + folder_type))
+
+
+@files_bp.route('/rename', methods=['POST'])
+@login_required
+def rename():
+    """Handle file/folder renaming."""
+    folder_type = request.form.get('folder_type', 'personal')
+    old_name = request.form.get('old_name', '')
+    new_name = request.form.get('new_name', '').strip()
+    rel_path = request.form.get('path', '')
+    is_dir = request.form.get('is_dir', 'false') == 'true'
+
+    if folder_type == 'shared' and not current_user.can_upload_to_shared:
+        flash('Доступ запрещён. У вас нет прав для переименования в общей папке.', 'error')
+        return redirect(url_for('main.shared'))
+
+    if not old_name or not new_name:
+        flash('Введите новое имя.', 'error')
+        return redirect(url_for('main.shared' if folder_type == 'shared' else 'main.personal', path=rel_path) if rel_path else url_for('main.' + folder_type))
+
+    base_path = get_base_path(folder_type, current_app.config['UPLOAD_FOLDER'], current_user.username)
+    success, message = rename_item(base_path, rel_path, old_name, new_name, is_dir=is_dir)
+
+    flash(message, 'success' if success else 'error')
     return redirect(url_for('main.' + folder_type, path=rel_path) if rel_path else url_for('main.' + folder_type))

@@ -194,3 +194,66 @@ def is_previewable(filename):
 def safe_filename(filename):
     """Get secure filename."""
     return secure_filename(filename) if filename else ''
+
+
+def rename_item(base_path, rel_path, old_name, new_name, is_dir=False):
+    """
+    Rename a file or folder within a base path.
+
+    Args:
+        base_path: Base directory path (e.g. uploads/shared)
+        rel_path: Relative path to parent directory of the item
+        old_name: Current name of the file/folder
+        new_name: New name for the file/folder
+        is_dir: Whether the item is a directory
+
+    Returns:
+        tuple: (success: bool, message: str)
+    """
+    old_full_path = os.path.join(base_path, rel_path, old_name) if rel_path else os.path.join(base_path, old_name)
+    new_full_path = os.path.join(base_path, rel_path, new_name) if rel_path else os.path.join(base_path, new_name)
+
+    # Security check
+    old_full_path = os.path.normpath(old_full_path)
+    new_full_path = os.path.normpath(new_full_path)
+
+    if not old_full_path.startswith(os.path.normpath(base_path)):
+        return False, 'Доступ запрещён.'
+
+    if not new_full_path.startswith(os.path.normpath(base_path)):
+        return False, 'Доступ запрещён.'
+
+    # Check source exists
+    if not os.path.exists(old_full_path):
+        return False, 'Элемент не найден.'
+
+    # Check target doesn't exist
+    if os.path.exists(new_full_path):
+        return False, 'Файл или папка с таким именем уже существует.'
+
+    # Validate new name
+    if is_dir:
+        safe_new_name = secure_filename(new_name)
+    else:
+        # For files, preserve extension
+        if '.' in new_name:
+            name_part, ext = new_name.rsplit('.', 1)
+            safe_name = secure_filename(name_part)
+            safe_ext = secure_filename(ext)
+            safe_new_name = f'{safe_name}.{safe_ext}' if safe_name else None
+        else:
+            safe_new_name = secure_filename(new_name)
+
+        if safe_new_name is None:
+            return False, 'Неверное имя файла.'
+
+    if not safe_new_name:
+        return False, 'Неверное имя.'
+
+    new_full_path = os.path.join(os.path.dirname(new_full_path), safe_new_name)
+
+    try:
+        os.rename(old_full_path, new_full_path)
+        return True, f'Элемент переименован в "{safe_new_name}".'
+    except OSError as e:
+        return False, f'Ошибка при переименовании: {str(e)}'

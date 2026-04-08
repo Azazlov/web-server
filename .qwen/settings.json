@@ -8,7 +8,12 @@
       "Bash(.venv\\scripts\\python *)",
       "Bash(curl *)",
       "Bash(taskkill *)",
-      "Bash(findstr *)"
+      "Bash(findstr *)",
+      "Bash(mkdir *)",
+      "Bash(true)",
+      "Bash(pip install *)",
+      "Bash(dir *)",
+      "Bash(.venv\\scripts\\python.exe *)"
     ]
   },
   "$version": 3
