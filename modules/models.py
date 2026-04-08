@@ -140,3 +140,48 @@ def migrate_database_schema():
             conn.execute(db.text('ALTER TABLE users ADD COLUMN can_upload_shared BOOLEAN DEFAULT 0'))
             conn.commit()
         print('Column can_upload_shared added successfully!')
+
+
+def change_password(user_id, old_password, new_password):
+    """
+    Change user password.
+
+    Returns:
+        tuple: (success: bool, message: str)
+    """
+    user = User.query.get(int(user_id))
+    if not user:
+        return False, 'Пользователь не найден.'
+
+    if not user.check_password(old_password):
+        return False, 'Неверный текущий пароль.'
+
+    if len(new_password) < 6:
+        return False, 'Пароль должен быть не менее 6 символов.'
+
+    user.set_password(new_password)
+    db.session.commit()
+    return True, 'Пароль успешно изменён.'
+
+
+def get_folder_size(path):
+    """Get total size of a directory in bytes."""
+    import os
+    total = 0
+    if not os.path.exists(path):
+        return 0
+    for dirpath, dirnames, filenames in os.walk(path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            if os.path.exists(fp):
+                total += os.path.getsize(fp)
+    return total
+
+
+def format_folder_size(size_bytes):
+    """Format bytes to human-readable size."""
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if size_bytes < 1024.0:
+            return f"{size_bytes:.1f} {unit}"
+        size_bytes /= 1024.0
+    return f"{size_bytes:.1f} TB"

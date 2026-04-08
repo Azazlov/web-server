@@ -878,27 +878,120 @@ tr:hover .file-icon {
     .card {
         margin-bottom: 16px;
     }
-    
+
     .btn-action {
-        padding: 4px 10px;
-        font-size: 0.8rem;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        min-height: 44px;
+        min-width: 44px;
     }
-    
+
     .table-responsive {
         font-size: 0.85rem;
     }
-    
+
     .navbar-brand {
         font-size: 1.15rem;
     }
-    
+
     .card-header {
         font-size: 1rem;
         padding: 14px 16px;
     }
-    
+
     .modal-dialog {
         margin: 10px;
+    }
+
+    /* Mobile: stack action buttons vertically */
+    .file-item td:last-child {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: stretch !important;
+    }
+
+    /* Larger touch targets */
+    a, button, input, select, textarea {
+        min-height: 44px;
+    }
+
+    /* Make table cells stack on mobile */
+    .table-mobile-stack thead {
+        display: none;
+    }
+
+    .table-mobile-stack tbody tr {
+        display: block;
+        margin-bottom: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .table-mobile-stack td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border: none;
+    }
+
+    .table-mobile-stack td:last-child {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* Search bar full width */
+    .search-input-group .form-control {
+        font-size: 16px; /* Prevents iOS zoom */
+    }
+
+    /* Upload area full width */
+    .upload-area .row {
+        flex-direction: column;
+    }
+
+    .upload-area .col-auto {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    .upload-area .col-md-5 {
+        width: 100%;
+    }
+
+    /* Footer spacing */
+    footer {
+        padding: 16px;
+    }
+
+    /* Navbar dropdown full width */
+    .dropdown-menu {
+        min-width: 200px;
+    }
+}
+
+/* Small phone optimizations */
+@media (max-width: 480px) {
+    .container-fluid {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .file-item .btn-action {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+
+    .empty-state {
+        padding: 40px 16px;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
     }
 }
 

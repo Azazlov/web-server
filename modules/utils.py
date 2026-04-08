@@ -257,3 +257,62 @@ def rename_item(base_path, rel_path, old_name, new_name, is_dir=False):
         return True, f'Элемент переименован в "{safe_new_name}".'
     except OSError as e:
         return False, f'Ошибка при переименовании: {str(e)}'
+
+
+def search_files(base_path, query, rel_path=''):
+    """
+    Search for files and folders by name in base_path and all subdirectories.
+
+    Args:
+        base_path: Base directory to search in
+        query: Search query (substring match, case-insensitive)
+        rel_path: Starting relative path (optional)
+
+    Returns:
+        list: Matching items with metadata
+    """
+    if not query or not query.strip():
+        return []
+
+    query_lower = query.strip().lower()
+    results = []
+    search_root = os.path.join(base_path, rel_path) if rel_path else base_path
+
+    if not os.path.exists(search_root):
+        return []
+
+    for root, dirs, files in os.walk(search_root):
+        # Search directories
+        for d in dirs:
+            if query_lower in d.lower():
+                full_path = os.path.join(root, d)
+                item_rel = os.path.relpath(full_path, base_path).replace('\\', '/')
+                results.append({
+                    'name': d,
+                    'is_dir': True,
+                    'path': item_rel,
+                    'parent': os.path.dirname(item_rel).replace('\\', '/'),
+                    'size': 0,
+                    'size_human': '-',
+                    'modified': datetime.fromtimestamp(os.stat(full_path).st_mtime).strftime('%Y-%m-%d %H:%M'),
+                })
+
+        # Search files
+        for f in files:
+            if query_lower in f.lower():
+                full_path = os.path.join(root, f)
+                item_rel = os.path.relpath(full_path, base_path).replace('\\', '/')
+                stat = os.stat(full_path)
+                results.append({
+                    'name': f,
+                    'is_dir': False,
+                    'path': item_rel,
+                    'parent': os.path.dirname(item_rel).replace('\\', '/'),
+                    'size': stat.st_size,
+                    'size_human': format_size(stat.st_size),
+                    'modified': datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M'),
+                })
+
+    # Sort: dirs first, then alphabetically
+    results.sort(key=lambda x: (not x['is_dir'], x['name'].lower()))
+    return results

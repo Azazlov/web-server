@@ -185,7 +185,7 @@
                                 </label>
                             </div>
                             <div class="col-md-5">
-                                <input type="file" class="form-control" name="file" required>
+                                <input type="file" class="form-control" name="files" multiple>
                             </div>
                             <div class="col-auto">
                                 <button type="submit" class="btn btn-action" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
@@ -253,7 +253,7 @@
                                             <i class="bi bi-folder-open"></i> Открыть
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-warning btn-action"
-                                                onclick="openRenameModal('{{ item.name }}', {{ 'true' if item.is_dir else 'false' }}, 'personal')">
+                                                onclick="openRenameModal('{{ item.name | replace("'", "\\'") }}', {{ 'true' if item.is_dir else 'false' }}, 'personal')">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <form action="{{ url_for('files.delete') }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить эту папку и всё её содержимое?')">
@@ -268,7 +268,7 @@
                                     {% else %}
                                         {% if is_previewable(item.name) %}
                                         <button type="button" class="btn btn-sm btn-success btn-action me-1"
-                                                onclick="openPreview('personal', '{{ item.name }}', '{{ current_path }}')">
+                                                onclick="openPreview('personal', '{{ item.name | replace("'", "\\'") }}', '{{ current_path | replace("'", "\\'") }}')">
                                             <i class="bi bi-eye"></i> Просмотр
                                         </button>
                                         {% endif %}
@@ -276,7 +276,7 @@
                                             <i class="bi bi-download"></i> Скачать
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-warning btn-action"
-                                                onclick="openRenameModal('{{ item.name }}', false, 'personal')">
+                                                onclick="openRenameModal('{{ item.name | replace("'", "\\'") }}', false, 'personal')">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <form action="{{ url_for('files.delete') }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить этот файл?')">

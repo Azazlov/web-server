@@ -1,9 +1,10 @@
 """
 FileShare Local v2.1 - Authentication Routes
 """
+import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
-from flask_login import login_user, logout_user, login_required
-from modules.models import User, get_user_by_username, create_user, get_user_count
+from flask_login import login_user, logout_user, login_required, current_user
+from modules.models import User, get_user_by_username, create_user, get_user_count, change_password, get_folder_size, format_folder_size
 from modules.config import config
 
 auth_bp = Blueprint('auth', __name__)
@@ -54,8 +55,8 @@ def register():
             flash('Пароли не совпадают.', 'error')
             return render_template('register.html')
 
-        if len(password) < 4:
-            flash('Пароль должен быть не менее 4 символов.', 'error')
+        if len(password) < 6:
+            flash('Пароль должен быть не менее 6 символов.', 'error')
             return render_template('register.html')
 
         if get_user_by_username(username):
@@ -81,3 +82,39 @@ def logout():
     logout_user()
     flash('Вы вышли из системы.', 'info')
     return redirect(url_for('auth.login'))
+
+
+@auth_bp.route('/profile')
+@login_required
+def profile():
+    """User profile page with password change."""
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    personal_path = os.path.join(upload_folder, 'users', current_user.username)
+    folder_size = get_folder_size(personal_path)
+    size_human = format_folder_size(folder_size)
+
+    return render_template('profile.html', size_human=size_human)
+
+
+@auth_bp.route('/profile/password', methods=['POST'])
+@login_required
+def change_user_password():
+    """Handle password change."""
+    old_password = request.form.get('old_password', '')
+    new_password = request.form.get('new_password', '')
+    confirm_password = request.form.get('confirm_password', '')
+
+    if not old_password or not new_password:
+        flash('Заполните все поля.', 'error')
+        return redirect(url_for('auth.profile'))
+
+    if new_password != confirm_password:
+        flash('Новые пароли не совпадают.', 'error')
+        return redirect(url_for('auth.profile'))
+
+    success, message = change_password(current_user.id, old_password, new_password)
+    flash(message, 'success' if success else 'error')
+
+    if success:
+        return redirect(url_for('auth.profile'))
+    return redirect(url_for('auth.profile'))

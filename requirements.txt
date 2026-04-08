@@ -2,3 +2,6 @@ Flask==2.3.3
 Flask-Login==0.6.2
 Flask-SQLAlchemy==3.0.5
 Werkzeug==2.3.7
+rjsmin==1.2.1
+csscompressor==0.9.5
+flask-minify==0.42

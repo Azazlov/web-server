@@ -11,7 +11,8 @@ DEFAULT_CONFIG = {
     'server_port': 80,
     'max_upload_size_mb': 100,
     'allow_registration': True,
-    'debug_mode': False
+    'debug_mode': False,
+    'production_mode': False
 }
 
 
@@ -23,7 +24,7 @@ class Config:
         self.load()
     
     def load(self):
-        """Load configuration from JSON file."""
+        """Load configuration from JSON file. Create it if missing."""
         if os.path.exists(CONFIG_FILE):
             try:
                 with open(CONFIG_FILE, 'r') as f:
@@ -31,6 +32,11 @@ class Config:
                     self._config.update(loaded)
             except (json.JSONDecodeError, IOError) as e:
                 print(f"Warning: Could not load config file: {e}")
+                self.save()
+        else:
+            print("Config file not found. Creating config.json with default settings...")
+            self.save()
+            print(f"  Created: {CONFIG_FILE}")
         return self._config
     
     def save(self):
@@ -70,7 +76,11 @@ class Config:
     @property
     def debug_mode(self):
         return self._config.get('debug_mode', DEFAULT_CONFIG['debug_mode'])
-    
+
+    @property
+    def production_mode(self):
+        return self._config.get('production_mode', DEFAULT_CONFIG['production_mode'])
+
     def toggle_registration(self):
         """Toggle registration setting and save."""
         self._config['allow_registration'] = not self._config['allow_registration']

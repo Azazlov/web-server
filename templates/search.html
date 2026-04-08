@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Поиск - FileShare Local{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 30px !important;
+        border-radius: 16px 16px 0 0 !important;
+        border: none;
+    }
+
+    .search-input-group {
+        position: relative;
+    }
+
+    .search-input-group .form-control {
+        padding: 14px 20px 14px 50px;
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .search-input-group .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+
+    .search-input-group .search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #a0aec0;
+        font-size: 1.2rem;
+    }
+
+    .search-type-selector {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .search-type-btn {
+        padding: 8px 20px;
+        border-radius: 20px;
+        border: 2px solid rgba(255,255,255,0.3);
+        background: transparent;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .search-type-btn.active {
+        background: rgba(255,255,255,0.2);
+        border-color: white;
+    }
+
+    .search-type-btn:hover {
+        background: rgba(255,255,255,0.15);
+        color: white;
+    }
+
+    .result-item {
+        padding: 14px 18px;
+        border-radius: 12px;
+        background: white;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .result-item:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        transform: translateX(5px);
+    }
+
+    .result-icon {
+        font-size: 2rem;
+    }
+
+    .result-details {
+        flex: 1;
+    }
+
+    .result-path {
+        font-size: 0.8rem;
+        color: #a0aec0;
+    }
+
+    .empty-search {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-search i {
+        font-size: 5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .highlight {
+        background: linear-gradient(135deg, #667eea33 0%, #764ba233 100%);
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-lg">
+            <div class="search-header">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h4 class="mb-0 text-white">
+                        <i class="bi bi-search"></i> Поиск файлов
+                    </h4>
+                </div>
+
+                <!-- Search Form -->
+                <form action="{{ url_for('main.search') }}" method="GET">
+                    <input type="hidden" name="folder_type" value="{{ folder_type }}">
+                    <div class="search-input-group">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" class="form-control" name="q" value="{{ query }}"
+                               placeholder="Введите имя файла или папки..." autofocus>
+                    </div>
+
+                    <!-- Folder Type Selector -->
+                    <div class="search-type-selector">
+                        <a href="{{ url_for('main.search', q=query, folder_type='personal') }}"
+                           class="search-type-btn {{ 'active' if folder_type == 'personal' }}">
+                            <i class="bi bi-folder"></i> Личная папка
+                        </a>
+                        <a href="{{ url_for('main.search', q=query, folder_type='shared') }}"
+                           class="search-type-btn {{ 'active' if folder_type == 'shared' }}">
+                            <i class="bi bi-people"></i> Общая папка
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-body">
+                {% if query %}
+                    <!-- Results -->
+                    <div class="mb-3">
+                        <span class="text-muted">Найдено результатов: <strong>{{ results|length }}</strong></span>
+                    </div>
+
+                    {% if results %}
+                        {% for item in results %}
+                        <div class="result-item">
+                            {% if item.is_dir %}
+                                <i class="bi bi-folder result-icon" style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                            {% else %}
+                                <i class="bi bi-file-earmark result-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                            {% endif %}
+                            <div class="result-details">
+                                <div>
+                                    <strong>{{ item.name }}</strong>
+                                    {% if item.parent %}
+                                        <span class="result-path ms-2">
+                                            <i class="bi bi-folder2"></i> {{ item.parent }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="result-path mt-1">
+                                    {{ item.size_human }} • {{ item.modified }}
+                                </div>
+                            </div>
+                            <div>
+                                {% if item.is_dir %}
+                                    <a href="{{ url_for('main.' + folder_type, path=item.path) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-folder-open"></i> Открыть
+                                    </a>
+                                {% else %}
+                                    {% if is_previewable(item.name) %}
+                                    <button type="button" class="btn btn-sm btn-success me-1"
+                                            onclick="openPreview('{{ folder_type }}', '{{ item.name | replace("'", "\\'") }}', '{{ item.parent | replace("'", "\\'") }}')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    {% endif %}
+                                    <a href="{{ url_for('files.download', folder_type=folder_type, filename=item.name, path=item.parent) }}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-search">
+                            <i class="bi bi-search"></i>
+                            <p class="mt-3 text-muted">Ничего не найдено по запросу «<strong>{{ query }}</strong>»</p>
+                            <p class="text-muted small">Попробуйте изменить запрос или выбрать другую папку</p>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-search">
+                        <i class="bi bi-search"></i>
+                        <p class="mt-3 text-muted">Введите запрос для поиска файлов и папок</p>
+                        <p class="text-muted small">Поиск работает по всей структуре папок</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border: none;">
+                <h5 class="modal-title">
+                    <i class="bi bi-eye"></i> Предпросмотр: <span id="previewFilename"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center" id="previewBody" style="min-height: 400px; background: #f8f9fa;">
+                <div class="d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border: none; background: #f8f9fa;">
+                <a id="previewDownloadBtn" href="#" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <i class="bi bi-download"></i> Скачать
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

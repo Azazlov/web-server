@@ -18,7 +18,7 @@ files_bp = Blueprint('files', __name__)
 @files_bp.route('/upload', methods=['POST'])
 @login_required
 def upload():
-    """Handle file upload."""
+    """Handle file upload (single or multiple)."""
     folder_type = request.form.get('folder_type', 'personal')
 
     # Check if user upload is blocked for personal folder
@@ -30,29 +30,51 @@ def upload():
     if folder_type == 'shared' and not current_user.can_upload_to_shared:
         flash('Доступ запрещён. У вас нет прав для загрузки в общую папку.', 'error')
         return redirect(url_for('main.shared'))
-    
+
     base_path = get_base_path(folder_type, current_app.config['UPLOAD_FOLDER'], current_user.username)
     rel_path = request.form.get('path', '')
-    
-    if 'file' not in request.files:
-        flash('Файл не выбран.', 'error')
-        return redirect(url_for('main.shared' if folder_type == 'shared' else 'main.personal'))
-    
-    file = request.files['file']
-    if file.filename == '':
-        flash('Файл не выбран.', 'error')
-        return redirect(url_for('main.shared' if folder_type == 'shared' else 'main.personal'))
-    
-    filename = safe_filename(file.filename)
-    if not filename:
-        flash('Неверное имя файла.', 'error')
-        return redirect(url_for('main.shared' if folder_type == 'shared' else 'main.personal'))
-    
     upload_path = os.path.join(base_path, rel_path) if rel_path else base_path
     os.makedirs(upload_path, exist_ok=True)
-    file.save(os.path.join(upload_path, filename))
-    
-    flash(f'Файл "{filename}" успешно загружён.', 'success')
+
+    # Check for multiple files
+    files = request.files.getlist('files') if 'files' in request.files else None
+
+    # Fallback to single file for backwards compatibility
+    if not files or (len(files) == 1 and files[0].filename == ''):
+        if 'file' in request.files:
+            single = request.files['file']
+            if single.filename:
+                files = [single]
+
+    if not files:
+        flash('Файлы не выбраны.', 'error')
+        return redirect(url_for('main.shared' if folder_type == 'shared' else 'main.personal', path=rel_path) if rel_path else url_for('main.' + folder_type))
+
+    # Process all files
+    uploaded = []
+    skipped = []
+    for file in files:
+        if not file or not file.filename:
+            continue
+
+        filename = safe_filename(file.filename)
+        if not filename:
+            skipped.append(file.filename)
+            continue
+
+        file.save(os.path.join(upload_path, filename))
+        uploaded.append(filename)
+
+    # Build feedback
+    if uploaded:
+        if len(uploaded) == 1:
+            flash(f'Файл "{uploaded[0]}" успешно загружен.', 'success')
+        else:
+            flash(f'Загружено файлов: {len(uploaded)}.', 'success')
+
+    if skipped:
+        flash(f'Пропущено файлов: {len(skipped)} (неверные имена).', 'warning')
+
     return redirect(url_for('main.' + folder_type, path=rel_path) if rel_path else url_for('main.' + folder_type))
 
 

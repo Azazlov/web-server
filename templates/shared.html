@@ -175,7 +175,7 @@
                                 </label>
                             </div>
                             <div class="col-md-5">
-                                <input type="file" class="form-control" name="file" required>
+                                <input type="file" class="form-control" name="files" multiple>
                             </div>
                             <div class="col-auto">
                                 <button type="submit" class="btn btn-action" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; border: none; box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3);">
@@ -250,7 +250,7 @@
                                         </a>
                                         {% if current_user.can_upload_to_shared %}
                                         <button type="button" class="btn btn-sm btn-outline-warning btn-action"
-                                                onclick="openRenameModal('{{ item.name }}', {{ 'true' if item.is_dir else 'false' }}, 'shared')">
+                                                onclick="openRenameModal('{{ item.name | replace("'", "\\'") }}', {{ 'true' if item.is_dir else 'false' }}, 'shared')">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <form action="{{ url_for('files.delete') }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить эту папку и всё её содержимое?')">
@@ -266,7 +266,7 @@
                                     {% else %}
                                         {% if is_previewable(item.name) %}
                                         <button type="button" class="btn btn-sm btn-success btn-action me-1"
-                                                onclick="openPreview('shared', '{{ item.name }}', '{{ current_path }}')">
+                                                onclick="openPreview('shared', '{{ item.name | replace("'", "\\'") }}', '{{ current_path | replace("'", "\\'") }}')">
                                             <i class="bi bi-eye"></i> Просмотр
                                         </button>
                                         {% endif %}
@@ -275,7 +275,7 @@
                                         </a>
                                         {% if current_user.can_upload_to_shared %}
                                         <button type="button" class="btn btn-sm btn-outline-warning btn-action"
-                                                onclick="openRenameModal('{{ item.name }}', {{ 'true' if item.is_dir else 'false' }}, 'shared')">
+                                                onclick="openRenameModal('{{ item.name | replace("'", "\\'") }}', {{ 'true' if item.is_dir else 'false' }}, 'shared')">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <form action="{{ url_for('files.delete') }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить этот файл?')">

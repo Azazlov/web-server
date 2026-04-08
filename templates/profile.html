@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль - FileShare Local{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px !important;
+        border-radius: 16px 16px 0 0 !important;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 0 auto 20px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+
+    .profile-card {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+
+    .stat-box {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-box:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    .stat-box i {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-box h4 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 5px 0;
+        color: #2d3748;
+    }
+
+    .stat-box p {
+        color: #718096;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .password-form .form-control {
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .password-form .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-4">
+        <!-- Profile Card -->
+        <div class="card profile-card shadow-lg">
+            <div class="profile-header text-center">
+                <div class="profile-avatar">
+                    {{ current_user.username[0].upper() }}
+                </div>
+                <h4 class="text-white mb-1">{{ current_user.username }}</h4>
+                {% if current_user.is_admin %}
+                    <span class="badge" style="background: rgba(255,255,255,0.9); color: #667eea;">
+                        <i class="bi bi-shield-check"></i> Администратор
+                    </span>
+                {% else %}
+                    <span class="badge" style="background: rgba(255,255,255,0.9); color: #667eea;">
+                        <i class="bi bi-person"></i> Пользователь
+                    </span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <i class="bi bi-hdd-stack"></i>
+                            <h4>{{ size_human }}</h4>
+                            <p>Хранилище</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-box">
+                            <i class="bi bi-calendar-check"></i>
+                            <h4 style="font-size: 1.2rem;">{{ current_user.created_at.strftime('%d.%m.%Y') if current_user.created_at else '-' }}</h4>
+                            <p>Регистрация</p>
+                        </div>
+                    </div>
+                    {% if current_user.upload_blocked %}
+                    <div class="col-12">
+                        <div class="alert alert-warning mb-0" style="border-radius: 12px;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <small>Загрузка в личную папку заблокирована</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <!-- Change Password -->
+        <div class="card profile-card shadow-lg">
+            <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 20px !important;">
+                <i class="bi bi-key"></i> Смена пароля
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('auth.change_user_password') }}" method="POST" class="password-form">
+                    <div class="mb-3">
+                        <label for="old_password" class="form-label">Текущий пароль</label>
+                        <input type="password" class="form-control" id="old_password" name="old_password" required
+                               placeholder="Введите текущий пароль">
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Новый пароль</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required
+                               placeholder="Минимум 6 символов" minlength="6">
+                    </div>
+                    <div class="mb-4">
+                        <label for="confirm_password" class="form-label">Подтвердите пароль</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required
+                               placeholder="Повторите новый пароль" minlength="6">
+                    </div>
+                    <button type="submit" class="btn btn-save">
+                        <i class="bi bi-check-circle"></i> Сохранить пароль
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card profile-card shadow-lg mt-4">
+            <div class="card-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; padding: 20px !important;">
+                <i class="bi bi-lightning"></i> Быстрые действия
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="{{ url_for('main.personal') }}" class="btn btn-outline-primary w-100 py-3">
+                            <i class="bi bi-folder"></i> Открыть личную папку
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('main.shared') }}" class="btn btn-outline-success w-100 py-3">
+                            <i class="bi bi-people"></i> Открыть общую папку
+                        </a>
+                    </div>
+                    {% if current_user.is_admin %}
+                    <div class="col-md-6">
+                        <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-outline-warning w-100 py-3">
+                            <i class="bi bi-gear"></i> Админ-панель
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

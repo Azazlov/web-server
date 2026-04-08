@@ -17,7 +17,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initAnimations();
     initRippleEffect();
     initDragDropUpload();
-    
+    initMobileSwipe();
+
     console.log('%c📁 FileShare Local v2.1 Enhanced UI initialized', 'color: #667eea; font-size: 14px; font-weight: bold;');
 });
 
@@ -160,15 +161,10 @@ function initFilePreview() {
     const fileInputs = document.querySelectorAll('input[type="file"]');
     fileInputs.forEach(function(input) {
         input.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-                const fileName = file.name;
-
-                // Show visual feedback
+            const files = e.target.files;
+            if (files.length > 0) {
                 input.parentElement.classList.add('file-selected');
 
-                // Create or update preview
                 let preview = input.parentElement.querySelector('.file-preview');
                 if (!preview) {
                     preview = document.createElement('div');
@@ -180,19 +176,49 @@ function initFilePreview() {
                         border-radius: 8px;
                         border-left: 3px solid #667eea;
                         animation: slideInRight 0.3s ease-out;
+                        max-height: 150px;
+                        overflow-y: auto;
                     `;
                     input.parentElement.appendChild(preview);
                 }
 
-                preview.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <i class="bi bi-file-earmark-check" style="color: #28a745; font-size: 1.5rem;"></i>
-                        <div>
-                            <div style="font-weight: 500; color: #2d3748;">${fileName}</div>
-                            <div style="font-size: 0.85rem; color: #718096;">${sizeMB} MB</div>
+                let totalSize = 0;
+                let fileListHTML = '';
+
+                if (files.length === 1) {
+                    const f = files[0];
+                    totalSize = f.size;
+                    const sizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+                    fileListHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="bi bi-file-earmark-check" style="color: #28a745; font-size: 1.5rem;"></i>
+                            <div>
+                                <div style="font-weight: 500; color: #2d3748;">${f.name}</div>
+                                <div style="font-size: 0.85rem; color: #718096;">${sizeMB} MB</div>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                } else {
+                    for (let i = 0; i < files.length; i++) {
+                        totalSize += files[i].size;
+                    }
+                    const totalMB = (totalSize / (1024 * 1024)).toFixed(2);
+                    fileListHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <i class="bi bi-files" style="color: #28a745; font-size: 1.5rem;"></i>
+                            <div>
+                                <div style="font-weight: 600; color: #2d3748;">${files.length} файлов</div>
+                                <div style="font-size: 0.85rem; color: #718096;">${totalMB} MB всего</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.8rem; color: #a0aec0; padding-left: 30px;">
+                            ${Array.from(files).slice(0, 5).map(f => `<div>• ${f.name}</div>`).join('')}
+                            ${files.length > 5 ? `<div>... и ещё ${files.length - 5}</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                preview.innerHTML = fileListHTML;
             }
         });
     });
@@ -234,17 +260,49 @@ function openPreview(folderType, filename, relPath) {
         bodyEl.innerHTML = `<img src="${previewUrl}" alt="${filename}" class="img-fluid" style="max-height: 80vh; object-fit: contain; border-radius: 8px;">`;
     } else if (ext === 'pdf') {
         bodyEl.innerHTML = `<iframe src="${previewUrl}" style="width: 100%; height: 80vh; border: none; border-radius: 8px;"></iframe>`;
-    } else if (textExts.includes(ext)) {
-        // Fetch text content and display with syntax highlighting fallback
+    } else if (ext === 'md') {
+        // Markdown preview with simple renderer
+        const MAX_PREVIEW_CHARS = 10000;
         fetch(previewUrl)
             .then(res => {
                 if (!res.ok) throw new Error('Network error');
                 return res.text();
             })
             .then(text => {
+                const truncated = text.length > MAX_PREVIEW_CHARS;
+                const previewText = truncated ? text.slice(0, MAX_PREVIEW_CHARS) : text;
+                const html = renderMarkdown(previewText);
+                bodyEl.innerHTML = `
+                    <div class="markdown-preview" style="text-align: left; max-height: 70vh; overflow: auto; background: #ffffff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        ${html}
+                        ${truncated ? '<div style="margin-top: 20px; padding: 12px 16px; background: #fff3cd; border-radius: 8px; color: #856404; font-size: 0.9rem;"><i class="bi bi-exclamation-triangle"></i> Показаны первые 10\u202F000 символов. Скачайте файл для полного просмотра.</div>' : ''}
+                    </div>
+                `;
+            })
+            .catch(err => {
+                bodyEl.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Ошибка загрузки файла: ${err.message}
+                    </div>
+                `;
+            });
+    } else if (textExts.includes(ext)) {
+        // Plain text / code preview
+        const MAX_PREVIEW_CHARS = 10000;
+        fetch(previewUrl)
+            .then(res => {
+                if (!res.ok) throw new Error('Network error');
+                return res.text();
+            })
+            .then(text => {
+                const truncated = text.length > MAX_PREVIEW_CHARS;
+                const previewText = truncated ? text.slice(0, MAX_PREVIEW_CHARS) : text;
+                const truncationNote = truncated
+                    ? '\n\n<span style="color: #ffc107;">⚠ Показаны первые 10\u202F000 символов. Скачайте файл для полного просмотра.</span>'
+                    : '';
                 bodyEl.innerHTML = `
                     <div style="text-align: left; max-height: 70vh; overflow: auto; background: #1e1e1e; border-radius: 8px; padding: 20px;">
-                        <pre style="margin: 0; color: #d4d4d4; font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word;"><code>${escapeHtml(text)}</code></pre>
+                        <pre style="margin: 0; color: #d4d4d4; font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word;"><code>${escapeHtml(previewText)}${escapeHtml(truncationNote)}</code></pre>
                     </div>
                 `;
             })
@@ -268,6 +326,125 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+/**
+ * Simple Markdown to HTML renderer (no external dependency).
+ * Supports: headings, bold, italic, code, links, images, lists, blockquotes, horizontal rules, code blocks.
+ */
+function renderMarkdown(text) {
+    const lines = text.split('\n');
+    let html = '';
+    let inCodeBlock = false;
+    let codeBlockContent = '';
+    let inList = false;
+
+    function closeList() {
+        if (inList) {
+            html += '</ul>';
+            inList = false;
+        }
+    }
+
+    function renderInline(line) {
+        // Images: ![alt](src)
+        line = line.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:6px;">');
+        // Links: [text](url)
+        line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+        // Inline code: `code`
+        line = line.replace(/`([^`]+)`/g, '<code style="background:#e9ecef;padding:2px 6px;border-radius:4px;font-size:0.9em;">$1</code>');
+        // Bold: **text** or __text__
+        line = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        line = line.replace(/__(.+?)__/g, '<strong>$1</strong>');
+        // Italic: *text* or _text_
+        line = line.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        line = line.replace(/(?<!\w)_(.+?)_(?!\w)/g, '<em>$1</em>');
+        // Strikethrough: ~~text~~
+        line = line.replace(/~~(.+?)~~/g, '<del>$1</del>');
+        return line;
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        // Code blocks: ``` ... ```
+        if (line.trim().startsWith('```')) {
+            if (inCodeBlock) {
+                html += '<pre style="background:#1e1e1e;color:#d4d4d4;padding:16px;border-radius:8px;overflow-x:auto;"><code>' + escapeHtml(codeBlockContent) + '</code></pre>';
+                codeBlockContent = '';
+                inCodeBlock = false;
+            } else {
+                closeList();
+                inCodeBlock = true;
+            }
+            continue;
+        }
+
+        if (inCodeBlock) {
+            codeBlockContent += (codeBlockContent ? '\n' : '') + line;
+            continue;
+        }
+
+        // Empty line
+        if (line.trim() === '') {
+            closeList();
+            continue;
+        }
+
+        // Headings
+        const headingMatch = line.match(/^(#{1,6})\s+(.+)/);
+        if (headingMatch) {
+            closeList();
+            const level = headingMatch[1].length;
+            const sizes = {1:'2rem',2:'1.5rem',3:'1.25rem',4:'1.1rem',5:'1rem',6:'0.9rem'};
+            html += `<h${level} style="font-size:${sizes[level]};font-weight:600;margin:16px 0 8px;color:#2d3748;">${renderInline(headingMatch[2])}</h${level}>`;
+            continue;
+        }
+
+        // Horizontal rule
+        if (/^(-{3,}|_{3,}|\*{3,})$/.test(line.trim())) {
+            closeList();
+            html += '<hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0;">';
+            continue;
+        }
+
+        // Blockquote
+        if (line.trim().startsWith('> ')) {
+            closeList();
+            html += `<blockquote style="border-left:4px solid #667eea;padding:8px 16px;margin:8px 0;background:#f8f9fa;border-radius:0 8px 8px 0;color:#4a5568;">${renderInline(line.trim().substring(2))}</blockquote>`;
+            continue;
+        }
+
+        // Unordered list
+        const listMatch = line.match(/^(\s*)[-*+]\s+(.+)/);
+        if (listMatch) {
+            if (!inList) {
+                html += '<ul style="padding-left:24px;margin:8px 0;">';
+                inList = true;
+            }
+            html += `<li style="margin:4px 0;">${renderInline(listMatch[2])}</li>`;
+            continue;
+        } else {
+            closeList();
+        }
+
+        // Ordered list
+        const olMatch = line.match(/^(\s*)\d+\.\s+(.+)/);
+        if (olMatch) {
+            html += `<div style="margin:4px 0;padding-left:24px;">${renderInline(olMatch[2])}</div>`;
+            continue;
+        }
+
+        // Regular paragraph
+        html += `<p style="margin:6px 0;line-height:1.6;color:#2d3748;">${renderInline(line)}</p>`;
+    }
+
+    if (inCodeBlock && codeBlockContent) {
+        html += '<pre style="background:#1e1e1e;color:#d4d4d4;padding:16px;border-radius:8px;overflow-x:auto;"><code>' + escapeHtml(codeBlockContent) + '</code></pre>';
+    }
+    closeList();
+
+    return html;
 }
 
 /**
@@ -397,29 +574,98 @@ function initTableInteractions() {
 }
 
 /**
- * Upload progress with animation
+ * Upload progress with animation and multi-file support
  */
 function initUploadProgress() {
     const uploadForms = document.querySelectorAll('form[enctype="multipart/form-data"]');
     uploadForms.forEach(function(form) {
         form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const fileInput = form.querySelector('input[type="file"]');
+            const files = fileInput ? fileInput.files : [];
             const submitBtn = form.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                const originalContent = submitBtn.innerHTML;
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = `
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    <span>Загрузка...</span>
+            const originalContent = submitBtn ? submitBtn.innerHTML : '';
+
+            // Build progress UI
+            if (!document.getElementById('uploadProgressBar')) {
+                const progressBar = document.createElement('div');
+                progressBar.id = 'uploadProgressBar';
+                progressBar.style.cssText = `
+                    margin-top: 15px;
+                    padding: 15px;
+                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                    border-radius: 12px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                    animation: slideInDown 0.3s ease-out;
                 `;
+                form.appendChild(progressBar);
+            }
+
+            const progressBar = document.getElementById('uploadProgressBar');
+            const fileCount = files.length || 1;
+            progressBar.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #2d3748; margin-bottom: 6px;">
+                            Загрузка ${fileCount > 1 ? fileCount + ' файлов' : 'файла'}...
+                        </div>
+                        <div class="progress" style="height: 8px; border-radius: 20px;">
+                            <div id="uploadProgressFill" class="progress-bar" role="progressbar"
+                                 style="width: 0%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); transition: width 0.3s ease;">
+                            </div>
+                        </div>
+                        <div id="uploadProgressText" style="font-size: 0.8rem; color: #718096; margin-top: 4px; text-align: center;">0%</div>
+                    </div>
+                </div>
+            `;
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status"></span> Загрузка...`;
                 submitBtn.style.opacity = '0.7';
-                
-                // Re-enable after 10 seconds as fallback
-                setTimeout(() => {
+            }
+
+            // Use XMLHttpRequest for progress tracking
+            const formData = new FormData(form);
+            const xhr = new XMLHttpRequest();
+
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    const fill = document.getElementById('uploadProgressFill');
+                    const text = document.getElementById('uploadProgressText');
+                    if (fill) fill.style.width = percent + '%';
+                    if (text) text.textContent = percent + '%';
+                }
+            });
+
+            xhr.addEventListener('load', function() {
+                // Clean up and redirect
+                if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = originalContent;
                     submitBtn.style.opacity = '1';
-                }, 10000);
-            }
+                }
+                const pb = document.getElementById('uploadProgressBar');
+                if (pb) pb.remove();
+
+                // Reload to show uploaded files and flash messages
+                window.location.reload();
+            });
+
+            xhr.addEventListener('error', function() {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalContent;
+                    submitBtn.style.opacity = '1';
+                }
+                showToast('Ошибка загрузки. Попробуйте снова.', 'error');
+            });
+
+            xhr.open('POST', form.action || window.location.href);
+            xhr.send(formData);
         });
     });
 }
@@ -719,3 +965,43 @@ dynamicStyles.textContent = `
     }
 `;
 document.head.appendChild(dynamicStyles);
+
+/**
+ * Mobile swipe gestures for file actions
+ */
+function initMobileSwipe() {
+    const fileRows = document.querySelectorAll('.file-item');
+    fileRows.forEach(row => {
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        row.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        row.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+
+            // Swipe left > 80px — reveal actions
+            if (diff > 80) {
+                row.style.background = 'linear-gradient(135deg, rgba(220, 53, 69, 0.05) 0%, rgba(255, 193, 7, 0.05) 100%)';
+                const actions = row.querySelector('td:last-child');
+                if (actions) {
+                    actions.style.opacity = '1';
+                    actions.style.transform = 'translateX(0)';
+                }
+                setTimeout(() => {
+                    row.style.background = '';
+                }, 2000);
+            }
+            // Swipe right > 80px — navigate into folder
+            if (diff < -80) {
+                const link = row.querySelector('a');
+                if (link) {
+                    link.click();
+                }
+            }
+        }, { passive: true });
+    });
+}
