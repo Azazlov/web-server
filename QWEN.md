@@ -1,46 +1,50 @@
-# FileShare Local v2.1 - Project Context
+# FileShare Local v2.1 — Project Context
 
 ## Project Overview
 
-**FileShare Local** is a local file sharing server built with Flask, featuring role-based access control and a responsive web interface. The application allows administrators and users to manage files in shared and personal folders with different permission levels.
+**FileShare Local** is a local file-sharing server built with Python Flask. It provides role-based access control (Admin/User), shared and personal folders, nested directory support, and a responsive Russian-localized web interface. The application uses a modular architecture with Flask Blueprints and an application factory pattern.
 
-### Key Features
-- **Role-based access control**: Admin and User roles with different permissions
-- **Shared folder**: Full access for admins, read-only for users
-- **Personal folders**: Private storage for each user
-- **Nested folder support**: Hierarchical folder structure
-- **Responsive UI**: Bootstrap 5-based web interface (Russian localization)
-- **Admin panel**: User management, server settings, statistics
-- **Modular architecture**: Separated into independent components (Blueprints)
+### Core Features
+- **Role-based access control**: Admin (full control) and User (read-only shared) roles
+- **Shared folder**: Admins can upload/delete; users can only view/download (unless granted upload permission)
+- **Personal folders**: Private per-user directories with full owner control
+- **Nested folder support**: Hierarchical directory navigation with breadcrumbs
+- **Admin panel**: User management, server settings toggle, live server restart, statistics
+- **Auto-first-admin**: The first registered user becomes an Administrator automatically
+- **Configurable settings**: Port, max upload size, registration toggle, debug mode via `config.json`
 
 ### Tech Stack
 - **Backend**: Python 3.8+, Flask 2.3.3
-- **Database**: SQLite with Flask-SQLAlchemy 3.0.5
-- **Authentication**: Flask-Login 0.6.2, Werkzeug password hashing
+- **Database**: SQLite via Flask-SQLAlchemy 3.0.5
+- **Auth**: Flask-Login 0.6.2, Werkzeug password hashing
 - **Frontend**: Bootstrap 5, Jinja2 templates, custom CSS/JS
+- **Localization**: Russian
 
 ---
 
 ## Building and Running
 
+### Prerequisites
+- Python 3.8+
+- Administrator/root privileges if using port 80
+
 ### Quick Start
 
-**Linux/macOS** (requires root for port 80):
-```bash
-cd scripts
-sudo ./setup_and_run.sh
-```
-
-**Windows** (run as Administrator):
+**Windows** (run as Administrator for port 80):
 ```batch
 cd scripts
 setup_and_run.bat
 ```
 
-**Access**: http://fileserver.local or http://localhost
+**Linux/macOS**:
+```bash
+cd scripts
+sudo ./setup_and_run.sh
+```
+
+Access at: `http://localhost` or `http://fileserver.local`
 
 ### Manual Setup
-
 ```bash
 # Install dependencies
 pip install -r requirements.txt
@@ -49,23 +53,20 @@ pip install -r requirements.txt
 python app.py
 ```
 
-### Development Mode
-
-Edit `config.json` to enable debug mode:
+### Using a Non-Privileged Port
+Edit `config.json`:
 ```json
-{
-    "debug_mode": true
-}
+{ "server_port": 8080 }
 ```
+Then restart the server.
 
 ### Available Scripts
-
-| Script | Description |
-|--------|-------------|
-| `setup_and_run.sh/.bat` | Full setup and server start |
-| `restart_server.sh/.bat` | Restart server |
-| `stop_server.sh/.bat` | Stop server |
-| `setup_hosts.sh/.bat` | Configure hosts file |
+| Script | Purpose |
+|--------|---------|
+| `scripts/setup_and_run.bat/.sh` | Full setup and server start |
+| `scripts/restart_server.bat/.sh` | Restart the server |
+| `scripts/stop_server.bat/.sh` | Stop the server |
+| `scripts/setup_hosts.bat/.sh` | Configure hosts file for `fileserver.local` |
 
 ---
 
@@ -73,111 +74,79 @@ Edit `config.json` to enable debug mode:
 
 ```
 web-server/
-├── app.py                      # Application factory (76 lines)
+├── app.py                      # Application factory (create_app)
 ├── requirements.txt            # Python dependencies
 ├── config.json                 # Runtime configuration (generated)
-├── database.db                 # SQLite database (generated)
+├── database.db                 # SQLite database (generated, in instance/)
 │
 ├── modules/                    # Core application modules
 │   ├── __init__.py
-│   ├── config.py               # Configuration manager (~90 lines)
-│   ├── models.py               # Database models & CRUD (~120 lines)
-│   ├── utils.py                # Utility functions (~165 lines)
+│   ├── config.py               # Configuration manager (load/save config.json)
+│   ├── models.py               # SQLAlchemy models + CRUD helpers + schema migration
+│   ├── utils.py                # Utility functions (path handling, decorators, formatting)
 │   └── routes/                 # Flask Blueprints
-│       ├── __init__.py
-│       ├── auth.py             # Authentication routes (~85 lines)
-│       ├── main.py             # Main pages (~65 lines)
-│       ├── files.py            # File operations (~150 lines)
-│       └── admin.py            # Admin panel (~75 lines)
+│       ├── __init__.py         # Blueprint exports
+│       ├── auth.py             # /login, /register, /logout
+│       ├── main.py             # /, /dashboard, /shared, /personal
+│       ├── files.py            # /upload, /download, /delete, /mkdir
+│       └── admin.py            # /admin, /admin/settings
 │
 ├── templates/                  # Jinja2 HTML templates
-│   ├── base.html               # Base template with navbar
-│   ├── login.html              # Login page
-│   ├── register.html           # Registration page
+│   ├── base.html               # Base layout with navbar
+│   ├── login.html
+│   ├── register.html
 │   ├── shared.html             # Shared folder view
 │   ├── personal.html           # Personal folder view
 │   └── admin.html              # Admin panel
 │
 ├── static/                     # Static assets
-│   ├── css/
-│   │   └── style.css           # Custom styles
-│   └── js/
-│       └── main.js             # Client-side scripts
+│   ├── css/style.css
+│   └── js/main.js
 │
-├── uploads/                    # User file storage
+├── uploads/                    # File storage
 │   ├── shared/                 # Shared folder
-│   └── users/                  # Personal folders (username-based)
+│   └── users/{username}/       # Per-user personal folders
 │
-├── scripts/                    # Shell scripts
-│   ├── setup_and_run.sh/.bat
-│   ├── restart_server.sh/.bat
-│   ├── stop_server.sh/.bat
-│   └── setup_hosts.sh/.bat
-│
-└── diagrams/                   # Mermaid diagrams (12 files)
-    ├── 01_architecture.mmd     # Architecture overview
-    ├── 02_config.mmd           # Config module
-    ├── 03_models.mmd           # Models module
-    ├── 04_utils.mmd            # Utils module
-    ├── 05_auth.mmd             # Authentication flow
-    ├── 06_main.mmd             # Main pages flow
-    ├── 07_files.mmd            # File management flow
-    ├── 08_admin.mmd            # Admin panel structure
-    ├── 09_upload.mmd           # Upload sequence
-    ├── 10_request_lifecycle.mmd
-    ├── 11_database.mmd         # Database ER diagram
-    └── 12_project_tree.mmd
+├── scripts/                    # Shell/batch scripts
+├── diagrams/                   # Mermaid diagrams (12 files)
+└── instance/                   # Flask instance folder (database.db)
 ```
 
 ---
 
 ## Architecture
 
-### Application Factory Pattern
-
+### Application Factory (`app.py`)
 ```python
-# app.py
 def create_app():
     app = Flask(__name__)
-    
-    # Configuration
-    app.config['SECRET_KEY'] = '...'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-    app.config['UPLOAD_FOLDER'] = 'uploads/'
-    
-    # Extensions
-    db.init_app(app)
-    login_manager.init_app(app)
-    
-    # Blueprints
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(main_bp)
-    app.register_blueprint(files_bp)
-    app.register_blueprint(admin_bp)
-    
+    # Config → Extensions → LoginManager → Blueprints → DB init
     return app
 ```
 
 ### Blueprints
 
-| Blueprint | Prefix | Routes |
-|-----------|--------|--------|
-| `auth_bp` | — | `/login`, `/register`, `/logout` |
-| `main_bp` | — | `/`, `/dashboard`, `/shared`, `/personal` |
-| `files_bp` | — | `/upload`, `/download`, `/delete`, `/mkdir` |
-| `admin_bp` | — | `/admin`, `/admin/settings` |
+| Blueprint | Routes |
+|-----------|--------|
+| `auth_bp` | `/login`, `/register`, `/logout` |
+| `main_bp` | `/`, `/dashboard`, `/shared`, `/personal` |
+| `files_bp` | `/upload`, `/download`, `/delete`, `/mkdir` |
+| `admin_bp` | `/admin`, `/admin/settings` |
 
 ### Database Models
 
 **User** (`users` table):
-- `id`, `username`, `password_hash`, `role`, `created_at`, `upload_blocked`
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `username` | String(50) | Unique username |
+| `password_hash` | Text | Hashed password |
+| `role` | Text | `'admin'` or `'user'` |
+| `created_at` | DateTime | Registration timestamp |
+| `upload_blocked` | Boolean | Blocks personal folder uploads |
+| `can_upload_shared` | Boolean | Allows shared folder uploads for non-admins |
 
----
-
-## Configuration
-
-### Config File (`config.json`)
-
+### Configuration (`config.json`)
 ```json
 {
     "server_port": 80,
@@ -189,9 +158,9 @@ def create_app():
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `server_port` | Server port | 80 |
-| `max_upload_size_mb` | Max file size (MB) | 100 |
-| `allow_registration` | Allow user registration | true |
+| `server_port` | HTTP server port | 80 |
+| `max_upload_size_mb` | Max upload size in MB | 100 |
+| `allow_registration` | Allow new user registration | true |
 | `debug_mode` | Flask debug mode | false |
 
 ---
@@ -200,73 +169,104 @@ def create_app():
 
 ### Shared Folder (`/shared`)
 
-| Action | Admin | User |
-|--------|-------|------|
-| View | ✅ | ✅ |
-| Download | ✅ | ✅ |
-| Upload | ✅ | ❌ |
-| Create Folders | ✅ | ❌ |
-| Delete | ✅ | ❌ |
+| Action | Admin | User (default) | User (with `can_upload_shared`) |
+|--------|-------|----------------|---------------------------------|
+| View | ✅ | ✅ | ✅ |
+| Download | ✅ | ✅ | ✅ |
+| Upload | ✅ | ❌ | ✅ |
+| Create Folders | ✅ | ❌ | ❌ |
+| Delete | ✅ | ❌ | ❌ |
 
 ### Personal Folder (`/users/{username}`)
 
 | Action | Owner | Others |
 |--------|-------|--------|
-| View/Download/Upload/Delete | ✅ | ❌ |
+| All operations | ✅ | ❌ |
 
-**Note**: Admin can block user upload permissions via admin panel.
+**Note**: Admins can block a user's personal folder uploads via `upload_blocked` flag.
+
+---
+
+## Security
+
+- Passwords hashed with `werkzeug.security.generate_password_hash`
+- Path traversal prevention (`..` stripping + `startswith(base_path)` validation)
+- `@login_required` and `@admin_required` decorators on protected routes
+- `secure_filename` used for uploaded files
+- Jinja2 auto-escaping for XSS protection
 
 ---
 
 ## Development Conventions
 
-### Code Style
-- Python modules follow snake_case naming
-- Docstrings present on all modules and classes
-- Type hints used where applicable
-- Error handling with try/except blocks
-
-### Security Practices
-- Password hashing with `werkzeug.security.generate_password_hash`
-- Path traversal prevention with `secure_filename` and path validation
-- Login required decorators on protected routes
-- Admin-only routes protected with `@admin_required`
-- Jinja2 auto-escaping for XSS protection
-
-### Testing
-- No formal test suite present
-- Manual testing via web interface
-
-### First User Behavior
-- The first registered user automatically becomes an **Administrator**
-- Subsequent users are created as regular **Users**
+- **Python style**: snake_case naming, docstrings on modules/classes, error handling with try/except
+- **Modular design**: Each concern isolated (config, models, utils, route blueprints)
+- **CRUD helpers**: Database operations in `models.py` as standalone functions, not methods on models
+- **Russian localization**: All user-facing text in templates and flash messages is in Russian
+- **No formal test suite**: Testing is manual via the web interface
+- **Schema migration**: `migrate_database_schema()` adds missing columns on startup using raw SQL `ALTER TABLE`
 
 ---
 
-## Common Commands
+## Common Operations
 
+### View database
 ```bash
-# View database contents
 sqlite3 instance/database.db ".schema"
+```
 
-# Check running process
-lsof -i :80  # macOS/Linux
-netstat -ano | findstr :80  # Windows
-
-# Reset database (deletes all users)
+### Reset database (deletes all data)
+```bash
 rm database.db  # or del database.db on Windows
+```
 
-# Reset configuration
+### Reset configuration
+```bash
 rm config.json
+```
+
+### Check what's using port 80
+```bash
+# Windows
+netstat -ano | findstr :80
+
+# Linux/macOS
+lsof -i :80
 ```
 
 ---
 
 ## Known Issues
 
-1. **Port 80 requires admin/root privileges** - Use port 8080 or run with sudo
-2. **Restart script may cause "Address already in use"** - Manual restart may be needed
-3. **Registration can be disabled** - Re-enable via admin panel or config.json
+1. **Port 80 requires admin/root** — Use port 8080 or run with elevated privileges
+2. **Restart may fail with "Address already in use"** — The old process may still hold the port; manually kill it and restart
+3. **Registration can be disabled** — Re-enable via admin panel or by editing `config.json`
+
+---
+
+## Key Code Patterns
+
+### Creating a new route in a blueprint
+```python
+from flask import Blueprint
+my_bp = Blueprint('my', __name__)
+
+@my_bp.route('/my-route')
+@login_required          # if auth needed
+@admin_required          # if admin only
+def my_view():
+    ...
+```
+
+### Adding a config setting
+1. Add to `DEFAULT_CONFIG` in `modules/config.py`
+2. Add a `@property` accessor on the `Config` class
+3. Add to `config.json` if you want a non-default value
+
+### Adding a database column
+1. Add to `User` model in `modules/models.py`
+2. Add migration logic to `migrate_database_schema()` using `ALTER TABLE`
+3. The migration runs automatically on app startup
 
 ---
 
@@ -274,11 +274,8 @@ rm config.json
 
 | Metric | Value |
 |--------|-------|
-| Python files | 8 |
+| Python source files | 8 |
 | Total Python LOC | ~864 |
 | HTML templates | 6 |
 | Mermaid diagrams | 12 |
 | Blueprints | 4 |
-
-## Qwen Added Memories
-- @QWEN.md

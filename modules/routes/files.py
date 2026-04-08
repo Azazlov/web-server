@@ -8,7 +8,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from modules.utils import (
     get_base_path, get_relative_path, validate_path_security,
-    safe_filename, admin_required
+    safe_filename, admin_required, is_previewable
 )
 from modules.models import User
 
@@ -81,6 +81,37 @@ def download():
     
     directory = os.path.dirname(full_path)
     return send_from_directory(directory, os.path.basename(full_path), as_attachment=True)
+
+
+@files_bp.route('/preview')
+@login_required
+def preview():
+    """Serve a file inline for preview (not as attachment)."""
+    folder_type = request.args.get('folder_type', 'personal')
+    filename = request.args.get('filename', '')
+    rel_path = request.args.get('path', '')
+
+    if not filename:
+        flash('Файл не указан.', 'error')
+        return redirect(url_for('main.shared' if folder_type == 'shared' else 'main.personal'))
+
+    if not is_previewable(filename):
+        flash('Предпросмотр недоступен для этого типа файлов.', 'error')
+        return redirect(url_for('main.shared' if folder_type == 'shared' else 'main.personal'))
+
+    base_path = get_base_path(folder_type, current_app.config['UPLOAD_FOLDER'], current_user.username)
+    full_path, is_valid = validate_path_security(base_path, rel_path, filename)
+
+    if not is_valid:
+        flash('Доступ запрещён.', 'error')
+        return redirect(url_for('main.shared' if folder_type == 'shared' else 'main.personal'))
+
+    if not os.path.exists(full_path):
+        flash('Файл не найден.', 'error')
+        return redirect(url_for('main.shared' if folder_type == 'shared' else 'main.personal'))
+
+    directory = os.path.dirname(full_path)
+    return send_from_directory(directory, os.path.basename(full_path), as_attachment=False)
 
 
 @files_bp.route('/delete', methods=['POST'])

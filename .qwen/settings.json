@@ -5,7 +5,10 @@
       "Bash(timeout *)",
       "Bash(tasklist *)",
       "Bash(.venv\\scripts\\activate)",
-      "Bash(.venv\\scripts\\python *)"
+      "Bash(.venv\\scripts\\python *)",
+      "Bash(curl *)",
+      "Bash(taskkill *)",
+      "Bash(findstr *)"
     ]
   },
   "$version": 3

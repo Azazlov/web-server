@@ -159,6 +159,38 @@ def allowed_file(filename, allowed_extensions=None):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
 
+# Previewable file types
+PREVIEWABLE_EXTENSIONS = {
+    # Images
+    'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'tif',
+    # PDF
+    'pdf',
+    # Text / code
+    'txt', 'md', 'csv', 'json', 'xml', 'html', 'htm', 'css', 'js', 'py',
+    'java', 'c', 'cpp', 'h', 'rb', 'go', 'rs', 'ts', 'yaml', 'yml', 'ini',
+    'cfg', 'conf', 'log', 'sh', 'bat', 'sql', 'r', 'm',
+    # Office (viewable via browser if MIME is supported)
+    'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+}
+
+# MIME types we can render directly in an iframe
+INLINE_MIME_TYPES = {
+    'image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp',
+    'image/svg+xml', 'image/tiff', 'image/x-icon',
+    'application/pdf',
+    'text/plain', 'text/html', 'text/css', 'text/csv', 'text/xml',
+    'application/json',
+}
+
+
+def is_previewable(filename):
+    """Check if a file is previewable based on extension."""
+    if not filename or '.' not in filename:
+        return False
+    ext = filename.rsplit('.', 1)[1].lower()
+    return ext in PREVIEWABLE_EXTENSIONS
+
+
 def safe_filename(filename):
     """Get secure filename."""
     return secure_filename(filename) if filename else ''

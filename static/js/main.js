@@ -164,10 +164,10 @@ function initFilePreview() {
             if (file) {
                 const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
                 const fileName = file.name;
-                
+
                 // Show visual feedback
                 input.parentElement.classList.add('file-selected');
-                
+
                 // Create or update preview
                 let preview = input.parentElement.querySelector('.file-preview');
                 if (!preview) {
@@ -183,7 +183,7 @@ function initFilePreview() {
                     `;
                     input.parentElement.appendChild(preview);
                 }
-                
+
                 preview.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <i class="bi bi-file-earmark-check" style="color: #28a745; font-size: 1.5rem;"></i>
@@ -196,6 +196,78 @@ function initFilePreview() {
             }
         });
     });
+}
+
+/**
+ * Open file preview modal
+ */
+function openPreview(folderType, filename, relPath) {
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    const titleEl = document.getElementById('previewFilename');
+    const bodyEl = document.getElementById('previewBody');
+    const downloadBtn = document.getElementById('previewDownloadBtn');
+
+    // Build URLs
+    const previewUrl = `/preview?folder_type=${encodeURIComponent(folderType)}&filename=${encodeURIComponent(filename)}&path=${encodeURIComponent(relPath)}`;
+    const downloadUrl = `/download?folder_type=${encodeURIComponent(folderType)}&filename=${encodeURIComponent(filename)}&path=${encodeURIComponent(relPath)}`;
+
+    titleEl.textContent = filename;
+    downloadBtn.href = downloadUrl;
+    bodyEl.innerHTML = `
+        <div class="d-flex align-items-center justify-content-center" style="height: 400px;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+        </div>
+    `;
+
+    modal.show();
+
+    // Determine preview type by extension
+    const ext = filename.split('.').pop().toLowerCase();
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'tif'];
+    const textExts = ['txt', 'md', 'csv', 'json', 'xml', 'html', 'htm', 'css', 'js', 'py',
+                      'java', 'c', 'cpp', 'h', 'rb', 'go', 'rs', 'ts', 'yaml', 'yml', 'ini',
+                      'cfg', 'conf', 'log', 'sh', 'bat', 'sql', 'r', 'm'];
+
+    if (imageExts.includes(ext)) {
+        bodyEl.innerHTML = `<img src="${previewUrl}" alt="${filename}" class="img-fluid" style="max-height: 80vh; object-fit: contain; border-radius: 8px;">`;
+    } else if (ext === 'pdf') {
+        bodyEl.innerHTML = `<iframe src="${previewUrl}" style="width: 100%; height: 80vh; border: none; border-radius: 8px;"></iframe>`;
+    } else if (textExts.includes(ext)) {
+        // Fetch text content and display with syntax highlighting fallback
+        fetch(previewUrl)
+            .then(res => {
+                if (!res.ok) throw new Error('Network error');
+                return res.text();
+            })
+            .then(text => {
+                bodyEl.innerHTML = `
+                    <div style="text-align: left; max-height: 70vh; overflow: auto; background: #1e1e1e; border-radius: 8px; padding: 20px;">
+                        <pre style="margin: 0; color: #d4d4d4; font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word;"><code>${escapeHtml(text)}</code></pre>
+                    </div>
+                `;
+            })
+            .catch(err => {
+                bodyEl.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Ошибка загрузки файла: ${err.message}
+                    </div>
+                `;
+            });
+    } else {
+        // Generic iframe preview
+        bodyEl.innerHTML = `<iframe src="${previewUrl}" style="width: 100%; height: 80vh; border: none; border-radius: 8px;"></iframe>`;
+    }
+}
+
+/**
+ * Escape HTML to prevent XSS in text preview
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 /**

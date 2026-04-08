@@ -9,7 +9,7 @@ from flask_login import LoginManager
 
 from modules.config import config
 from modules.models import db, User, migrate_database_schema
-from modules.utils import ensure_upload_dirs, migrate_user_folders
+from modules.utils import ensure_upload_dirs, migrate_user_folders, is_previewable
 from modules.routes import auth_bp, main_bp, files_bp, admin_bp
 
 
@@ -47,6 +47,11 @@ def create_app():
     def dirname_filter(path):
         import os
         return os.path.dirname(path)
+
+    # Expose is_previewable to templates
+    @app.context_processor
+    def inject_utils():
+        return dict(is_previewable=is_previewable)
     
     # Register blueprints
     app.register_blueprint(auth_bp)

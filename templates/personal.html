@@ -262,6 +262,12 @@
                                             </button>
                                         </form>
                                     {% else %}
+                                        {% if is_previewable(item.name) %}
+                                        <button type="button" class="btn btn-sm btn-success btn-action me-1"
+                                                onclick="openPreview('personal', '{{ item.name }}', '{{ current_path }}')">
+                                            <i class="bi bi-eye"></i> Просмотр
+                                        </button>
+                                        {% endif %}
                                         <a href="{{ url_for('files.download', folder_type='personal', filename=item.name, path=current_path) }}" class="btn btn-sm btn-primary btn-action" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border: none;">
                                             <i class="bi bi-download"></i> Скачать
                                         </a>
@@ -323,4 +329,32 @@
         </div>
     </div>
 </div>
+
+<!-- File Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border: none;">
+                <h5 class="modal-title">
+                    <i class="bi bi-eye"></i> Предпросмотр: <span id="previewFilename"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center" id="previewBody" style="min-height: 400px; background: #f8f9fa;">
+                <div class="d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border: none; background: #f8f9fa;">
+                <a id="previewDownloadBtn" href="#" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    <i class="bi bi-download"></i> Скачать
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
