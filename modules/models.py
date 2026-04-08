@@ -20,6 +20,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.Text, default='user', nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     upload_blocked = db.Column(db.Boolean, default=False, nullable=False)
+    can_upload_shared = db.Column(db.Boolean, default=False, nullable=False)
     
     def set_password(self, password):
         """Hash and set user password."""
@@ -38,7 +39,12 @@ class User(UserMixin, db.Model):
     def can_upload(self):
         """Check if user can upload files."""
         return not self.upload_blocked
-    
+
+    @property
+    def can_upload_to_shared(self):
+        """Check if user can upload files to shared folder."""
+        return self.is_admin or self.can_upload_shared
+
     def __repr__(self):
         return f'<User {self.username}>'
 
@@ -104,16 +110,33 @@ def toggle_user_upload_block(user_id):
     return None
 
 
+def toggle_user_shared_upload(user_id):
+    """Toggle user shared folder upload permission."""
+    user = User.query.get(int(user_id))
+    if user:
+        user.can_upload_shared = not user.can_upload_shared
+        db.session.commit()
+        return user.can_upload_shared
+    return None
+
+
 def migrate_database_schema():
     """Add missing columns to existing database tables."""
     from sqlalchemy import inspect
-    
+
     inspector = inspect(db.engine)
     columns = [col['name'] for col in inspector.get_columns('users')]
-    
+
     if 'upload_blocked' not in columns:
         print('Adding upload_blocked column to users table...')
         with db.engine.connect() as conn:
             conn.execute(db.text('ALTER TABLE users ADD COLUMN upload_blocked BOOLEAN DEFAULT 0'))
             conn.commit()
         print('Column upload_blocked added successfully!')
+
+    if 'can_upload_shared' not in columns:
+        print('Adding can_upload_shared column to users table...')
+        with db.engine.connect() as conn:
+            conn.execute(db.text('ALTER TABLE users ADD COLUMN can_upload_shared BOOLEAN DEFAULT 0'))
+            conn.commit()
+        print('Column can_upload_shared added successfully!')

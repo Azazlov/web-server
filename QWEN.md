@@ -279,3 +279,6 @@ rm config.json
 | HTML templates | 6 |
 | Mermaid diagrams | 12 |
 | Blueprints | 4 |
+
+## Qwen Added Memories
+- @QWEN.md

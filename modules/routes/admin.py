@@ -8,7 +8,7 @@ from threading import Thread
 from flask import Blueprint, render_template, redirect, url_for, flash, current_app, request
 from flask_login import login_required, current_user
 from modules.utils import admin_required
-from modules.models import get_all_users, get_user_by_id, toggle_user_upload_block, User, db
+from modules.models import get_all_users, get_user_by_id, toggle_user_upload_block, toggle_user_shared_upload, User, db
 from modules.config import config
 
 admin_bp = Blueprint('admin', __name__)
@@ -61,12 +61,23 @@ def admin_settings():
     elif action == 'toggle_upload_block':
         user_id = request.form.get('user_id', type=int)
         user = get_user_by_id(user_id)
-        
+
         if user and user.id != current_user.id:
             new_status = toggle_user_upload_block(user_id)
             status = 'запрещена' if new_status else 'разрешена'
             flash(f'Загрузка файлов пользователю {user.username} {status}.', 'success')
         else:
             flash('Нельзя изменить права самому себе.', 'error')
-    
+
+    elif action == 'toggle_shared_upload':
+        user_id = request.form.get('user_id', type=int)
+        user = get_user_by_id(user_id)
+
+        if user and user.id != current_user.id and not user.is_admin:
+            new_status = toggle_user_shared_upload(user_id)
+            status = 'разрешена' if new_status else 'запрещена'
+            flash(f'Загрузка в общую папку пользователю {user.username} {status}.', 'success')
+        else:
+            flash('Нельзя изменить права самому себе или администратору.', 'error')
+
     return redirect(url_for('admin.admin_panel'))

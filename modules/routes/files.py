@@ -20,14 +20,15 @@ files_bp = Blueprint('files', __name__)
 def upload():
     """Handle file upload."""
     folder_type = request.form.get('folder_type', 'personal')
-    
-    # Check if user upload is blocked (except for admin in shared folder)
+
+    # Check if user upload is blocked for personal folder
     if current_user.upload_blocked and folder_type == 'personal':
         flash('Ваша возможность загрузки файлов заблокирована. Обратитесь к администратору.', 'error')
         return redirect(url_for('main.personal'))
-    
-    if folder_type == 'shared' and not current_user.is_admin:
-        flash('Доступ запрещён. Только администраторы могут загружать файлы в общую папку.', 'error')
+
+    # Check if user can upload to shared folder (admin or has permission)
+    if folder_type == 'shared' and not current_user.can_upload_to_shared:
+        flash('Доступ запрещён. У вас нет прав для загрузки в общую папку.', 'error')
         return redirect(url_for('main.shared'))
     
     base_path = get_base_path(folder_type, current_app.config['UPLOAD_FOLDER'], current_user.username)
@@ -90,9 +91,9 @@ def delete():
     filename = request.form.get('filename', '')
     rel_path = request.form.get('path', '')
     is_dir = request.form.get('is_dir', 'false') == 'true'
-    
-    if folder_type == 'shared' and not current_user.is_admin:
-        flash('Доступ запрещён. Только администраторы могут удалять файлы из общей папки.', 'error')
+
+    if folder_type == 'shared' and not current_user.can_upload_to_shared:
+        flash('Доступ запрещён. У вас нет прав для удаления в общей папке.', 'error')
         return redirect(url_for('main.shared'))
     
     base_path = get_base_path(folder_type, current_app.config['UPLOAD_FOLDER'], current_user.username)
@@ -126,9 +127,9 @@ def mkdir():
     folder_type = request.form.get('folder_type', 'personal')
     folder_name = request.form.get('folder_name', '')
     rel_path = request.form.get('path', '')
-    
-    if folder_type == 'shared' and not current_user.is_admin:
-        flash('Доступ запрещён. Только администраторы могут создавать папки в общей папке.', 'error')
+
+    if folder_type == 'shared' and not current_user.can_upload_to_shared:
+        flash('Доступ запрещён. У вас нет прав для создания папок в общей папке.', 'error')
         return redirect(url_for('main.shared'))
     
     if not folder_name:
